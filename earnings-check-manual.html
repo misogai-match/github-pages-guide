@@ -372,7 +372,7 @@ li {
   <div class="header-label">Operations Manual</div>
   <h1>決算チェック 運用マニュアル</h1>
   <div class="header-meta">
-    決算チェック_20260228.xlsx &mdash; Version <span>1.0</span> &mdash; <span>2026-03-02</span>
+    決算チェック_20260303.xlsx &mdash; Version <span>1.1</span> &mdash; <span>2026-03-03</span>
   </div>
 </header>
 
@@ -393,6 +393,7 @@ li {
     <li><a href="#rules">運用ルール・鉄則</a></li>
     <li><a href="#tickers">収録銘柄一覧</a></li>
     <li><a href="#versioning">バージョン管理</a></li>
+    <li><a href="#lessons">実運用で判明した注意事項（NCLH初回）</a></li>
   </ol>
 </nav>
 
@@ -589,6 +590,31 @@ li {
       Date, 10Y, Stock price 入力<br>
       ガイダンスがあれば次Q列に転記
     </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <span class="step-num">Step 5</span>
+      Beat/Miss 文字色を設定<br>
+      → <a href="#guidance">§07参照</a>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <span class="step-num">Step 6</span>
+      日付フィールド更新<br>
+      セル書式の確認
+    </div>
+  </div>
+
+  <h3>Step 6 詳細：日付フィールドとセル書式</h3>
+  <div class="card">
+    <h4>日付フィールドの更新</h4>
+    <ul>
+      <li><strong>Actual行 Col H（記載日）</strong>：更新実施日を入力し、黄色の塗りつぶしを解除する</li>
+      <li><strong>次Q Estimate行 Col F（決算発表日）</strong>：次回決算発表予定日を入力し、黄色の塗りつぶしを解除する。未発表の場合は過去パターンから推定（例：前年同期 ± 数日）</li>
+      <li><strong>次Q Estimate行 Col H（記載日）</strong>：来週のコンセンサス更新時に使うため、黄色空欄のままでOK</li>
+    </ul>
+    <h4 style="margin-top:16px">セル書式の確認</h4>
+    <p>openpyxlでセルに値を書き込む際、既存のセル書式（number_format）はそのまま残る。書式が <code>0.0%</code> のセルに数値を入れると、920 が「92000%」と表示されてしまう。</p>
+    <p>対処：書き込み後に <code>number_format</code> を確認し、意図と異なる場合は同じ行の過去Qセルの書式に合わせる。</p>
   </div>
 
   <div class="alert alert-warning">
@@ -597,21 +623,63 @@ li {
   </div>
 </section>
 
-<!-- ═══ 07. ガイダンス ═══ -->
+<!-- ═══ 07. Beat/Miss色分け＋ガイダンス ═══ -->
 <section id="guidance">
-  <h2><span class="num">07</span>ガイダンスの取り扱い</h2>
-  <p>企業が提示するガイダンス（次Q・通年の見通し）は、Actual行の未来Q列に転記する。</p>
+  <h2><span class="num">07</span>Beat/Miss 色分けとガイダンスの取り扱い</h2>
 
-  <h3>色分けルール</h3>
+  <h3>色分けの基本原則</h3>
   <div class="card">
-    <p>
-      <span class="color-box color-green"></span><strong>緑</strong>：ガイダンスがコンセンサス予想を上回る（Beat）<br>
-      <span class="color-box color-red"></span><strong>赤</strong>：ガイダンスがコンセンサス予想を下回る（Miss）
-    </p>
-    <p style="margin-top:12px;color:var(--text-dim)">
-      比較対象は、Actual行直前の最新Estimate行の同列の値。
+    <p>Actual実績値およびガイダンス値は、直前のコンセンサス予想（Actual行直前の最新Estimate行の同列の値）と比較して、<strong>文字色</strong>で Beat/Miss を表現する。</p>
+    <p style="margin-top:12px">
+      <span style="color:#22c55e;font-weight:700">●</span> <strong>緑文字</strong>：コンセンサス予想を上回る（Beat）<br>
+      <span style="color:#ef4444;font-weight:700">●</span> <strong>赤文字</strong>：コンセンサス予想を下回る（Miss）
     </p>
   </div>
+
+  <div class="alert alert-danger">
+    <div class="alert-title">重要 — 塗りつぶしではなく文字色</div>
+    セルの背景色（塗りつぶし）ではなく、<strong>フォントの色</strong>を変更する。塗りつぶしは不明セルの黄色マーキング専用。
+  </div>
+
+  <h3>Actual実績値の色分け</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>対象行</th><th>比較方法</th><th>例（NCLH Q4 2025）</th></tr></thead>
+      <tbody>
+        <tr><td>Earnings（EPS）</td><td>Actual EPS vs 直前Estimate Earnings (Avg.)</td><td>$0.28 vs $0.27 → <span style="color:#22c55e">緑</span></td></tr>
+        <tr><td>Revenue</td><td>Actual Revenue vs 直前Estimate Revenue (Avg.)</td><td>$2,244 vs $2,340 → <span style="color:#ef4444">赤</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>通年（FY）列も同様に、FYのEstimate値と比較して色分けする。</p>
+
+  <h3>ガイダンスの取り扱い</h3>
+  <p>企業が提示するガイダンス（次Q・通年の見通し）は、Actual行の未来Q列に転記する。色分けルールはActualと同じ。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>対象</th><th>比較方法</th><th>例（NCLH 2026）</th></tr></thead>
+      <tbody>
+        <tr><td>Q1 2026 EPS ガイダンス</td><td>ガイダンス vs 同列のEstimate</td><td>$0.16 vs $0.14 → <span style="color:#22c55e">緑</span></td></tr>
+        <tr><td>FY 2026 EPS ガイダンス</td><td>同上</td><td>$2.38 vs $2.60 → <span style="color:#ef4444">赤</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>openpyxlでの実装</h3>
+  <pre><code>from openpyxl.styles import Font
+from copy import copy
+
+# 既存フォント属性を保持しつつ色だけ変更
+def font_with_color(cell, color):
+    f = copy(cell.font)
+    return Font(name=f.name, size=f.size, bold=f.bold,
+                italic=f.italic, color=color)
+
+# Beat → 緑文字
+cell.font = font_with_color(cell, "00A600")
+
+# Miss → 赤文字
+cell.font = font_with_color(cell, "FF0000")</code></pre>
 </section>
 
 <!-- ═══ 08. 行挿入の技術的注意 ═══ -->
@@ -759,6 +827,32 @@ python scripts/recalc.py output.xlsx
     Non-GAAP NI ÷ Diluted Shares の計算結果が、IRが開示しているEPS値と一致するか必ず確認する。<br>
     ズレがある場合はまっちさんに確認。原因の多くは Diluted Shares 数の差異（期中平均 vs 期末、希薄化調整の範囲等）。
   </div>
+
+  <h3>実例：NCLH Q4 2025（2026-03-03 検証済み）</h3>
+  <div class="card">
+    <h4>Diluted Shares の選択</h4>
+    <p>NCLHはGAAP基準とAdjusted基準で希薄化株式数が異なる。Adjusted Net Income の算出に使われた <strong>Adjusted basis</strong> のDiluted Sharesを使用する。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>Q4 2025</th><th>FY 2025</th></tr></thead>
+        <tbody>
+          <tr><td>GAAP Diluted Shares</td><td>459.518M</td><td>477.742M</td></tr>
+          <tr><td><strong>Adjusted Diluted Shares</strong></td><td><strong>465.918M</strong></td><td><strong>495.385M</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 style="margin-top:16px">EPS照合結果</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>Non-GAAP NI</th><th>÷ Shares</th><th>= 計算EPS</th><th>IR開示EPS</th><th>結果</th></tr></thead>
+        <tbody>
+          <tr><td>Q4</td><td>$130.419M</td><td>÷ 465.918M</td><td>$0.2799</td><td>$0.28</td><td>✅ 一致</td></tr>
+          <tr><td>FY</td><td>$1,044.752M</td><td>÷ 495.385M</td><td>$2.1090</td><td>$2.11</td><td>✅ 一致</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </section>
 
 <!-- ═══ 11. 運用ルール ═══ -->
@@ -794,6 +888,16 @@ python scripts/recalc.py output.xlsx
     <div class="alert-title">鉄則 6 — 分析は別シートで</div>
     メインシートはデータ蓄積専用。銘柄別分析・比較・グラフ等はメインシートの構造に影響を与えない別シートで展開する。
   </div>
+
+  <div class="alert alert-warning">
+    <div class="alert-title">鉄則 7 — セル書式（number_format）の確認</div>
+    openpyxlで値を書き込む際、既存のセル書式は変わらない。書式が <code>0.0%</code> のセルに金額を入力すると「92000%」のように表示される。書き込み後は必ず同行の過去Qセルの書式と比較し、不一致があれば <code>cell.number_format</code> を修正すること。
+  </div>
+
+  <div class="alert alert-info">
+    <div class="alert-title">鉄則 8 — Beat/Missは文字色、不明は黄色塗り</div>
+    Actual値・ガイダンス値のBeat/Missは<strong>フォント色</strong>（緑/赤）で表現する。セルの<strong>背景色（塗りつぶし）</strong>は不明セルの黄色マーキング専用であり、Beat/Missには使わない。詳細は<a href="#guidance">§07</a>参照。
+  </div>
 </section>
 
 <!-- ═══ 12. 収録銘柄一覧 ═══ -->
@@ -828,9 +932,68 @@ python scripts/recalc.py output.xlsx
   </div>
 </section>
 
+<!-- ═══ 14. 実運用で判明した注意事項 ═══ -->
+<section id="lessons">
+  <h2><span class="num">14</span>実運用で判明した注意事項（NCLH初回）</h2>
+  <p>2026-03-03、NCLH Q4 2025決算でActual更新の初回テストを実施。以下の学びを記録する。</p>
+
+  <h3>1. Gross Marginの計算方法</h3>
+  <div class="card">
+    <p>NCLHの場合、Gross Margin = Total Revenue − Total Cruise Operating Expense で算出。企業によって「Gross Profit」としてIRに明示されるケースと、自分で引き算が必要なケースがある。クルーズ業界のようにGross Profitが直接開示されない場合は、Income Statementから計算する。</p>
+    <p style="margin-top:8px">例：Q4 2025 → $2,244.4M − $1,323.5M = <strong>$920.9M</strong></p>
+  </div>
+
+  <h3>2. Op Cashflow の四半期逆算</h3>
+  <div class="card">
+    <p>NCLHのOp Cashflow は、Q3まで累計ベースで「通年 − 前Qまでの累計」の数式が入っている。Q4入力時も同じパターンで FY − Q1 − Q2 − Q3 の数式を入力する。</p>
+    <pre><code># Q4 Op Cashflow の数式例
+=2089.746-AO4029-AP4029-AQ4029</code></pre>
+  </div>
+
+  <h3>3. セル書式のトラップ（%表示問題）</h3>
+  <div class="card">
+    <p>Gross Margin セル（Q4・FY列）の <code>number_format</code> が <code>0.0%</code> になっており、920.881 が「92088.1%」と表示された。原因はシート上で該当列のフォーマットが%に設定されていたこと。</p>
+    <p style="margin-top:8px"><strong>対処</strong>：同行の過去Q列の書式（<code>#,##0.00</code>）をコピーして修正。</p>
+    <pre><code># 修正コード
+ref_fmt = ws.cell(row=4023, column=43).number_format  # Q3の書式を参照
+ws.cell(row=4023, column=44).number_format = ref_fmt   # Q4に適用
+ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre>
+  </div>
+
+  <h3>4. Beat/Miss の色分けルール確定</h3>
+  <div class="card">
+    <p>初回で塗りつぶし（cell fill）を使用したが、正しくは<strong>フォントの文字色</strong>で表現する。塗りつぶしは不明セルの黄色マーキング専用。</p>
+    <p style="margin-top:8px">Actual（Earnings / Revenue）とガイダンスの両方に適用。詳細は<a href="#guidance">§07</a>参照。</p>
+  </div>
+
+  <h3>5. Diluted Shares: GAAP vs Adjusted の使い分け</h3>
+  <div class="card">
+    <p>NCLHでは GAAP basis と Adjusted basis で Diluted Shares が異なる（転換社債の希薄化処理の差異）。Non-GAAP Net Income → EPS の逆算には <strong>Adjusted basis</strong> の値を使用する。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>GAAP basis</th><th>Adjusted basis</th><th>差異原因</th></tr></thead>
+        <tbody>
+          <tr><td>Q4 2025</td><td>459.5M</td><td>465.9M</td><td>転換社債のif-converted法適用差</td></tr>
+          <tr><td>FY 2025</td><td>477.7M</td><td>495.4M</td><td>同上（通年では差が拡大）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:8px;color:var(--text-dim)">※ 他社でも同様の差異があり得るため、IR資料の Non-GAAP reconciliation テーブルを必ず確認すること。</p>
+  </div>
+
+  <h3>6. 日付フィールドの運用</h3>
+  <div class="card">
+    <ul>
+      <li><strong>Col H（Actual行）</strong>：前回の記載日（黄色）→ 更新実施日に上書きし、黄色解除</li>
+      <li><strong>Col F（次Q Estimate行）</strong>：次回決算予定日を入力し、黄色解除。公式未発表なら前年パターンから推定</li>
+      <li><strong>Col H（次Q Estimate行）</strong>：来週のコンセンサス更新用。黄色空欄のまま</li>
+    </ul>
+  </div>
+</section>
+
 <!-- ═══ Footer ═══ -->
 <footer style="margin-top:80px;padding-top:32px;border-top:1px solid var(--border);text-align:center;color:var(--text-dim);font-size:13px;">
-  決算チェック 運用マニュアル v1.0 — 2026-03-02 作成<br>
+  決算チェック 運用マニュアル v1.1 — 2026-03-03 更新<br>
   <span style="font-family:'JetBrains Mono',monospace;font-size:11px;">Maintained by まっち &amp; Claude</span>
 </footer>
 
