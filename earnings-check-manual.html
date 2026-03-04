@@ -372,7 +372,7 @@ li {
   <div class="header-label">Operations Manual</div>
   <h1>決算チェック 運用マニュアル</h1>
   <div class="header-meta">
-    決算チェック_20260304.xlsx &mdash; Version <span>1.2</span> &mdash; <span>2026-03-04</span>
+    決算チェック_20260304.xlsx &mdash; Version <span>1.3</span> &mdash; <span>2026-03-04</span>
   </div>
 </header>
 
@@ -574,23 +574,71 @@ li {
     <span class="flow-arrow">→</span>
     <div class="flow-step">
       <span class="step-num">Step 2</span>
-      必要データを抽出<br>
-      Revenue, Non-GAAP NI, Gross Margin,<br>
-      Net Income, Op Cashflow, Equity, Shares
+      データ抽出 → Actual行入力<br>
+      <strong>書式チェック含む</strong>
     </div>
     <span class="flow-arrow">→</span>
     <div class="flow-step">
       <span class="step-num">Step 3</span>
-      Actual行の該当Q列に入力<br>
-      <strong>Non-GAAP NI → EPS逆算</strong><br>
-      → <a href="#nongaap">§10参照</a>
+      メタデータ入力<br>
+      日付 / ガイダンス / 10Y / 株価
     </div>
     <span class="flow-arrow">→</span>
     <div class="flow-step">
       <span class="step-num">Step 4</span>
-      Date, 10Y, Stock price 入力<br>
-      ガイダンスがあれば次Q列に転記
+      黄色セル管理<br>
+      → 検証 → ファイル出力
     </div>
+  </div>
+
+  <h3>06-A. Cが実行するActual更新 全ステップ</h3>
+  <div class="card">
+    <p>以下はCが毎回必ず実行する全手順。1つでも漏れると手戻りが発生する。</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:30px">#</th><th style="width:160px">作業</th><th>詳細</th><th style="width:120px">参照</th></tr></thead>
+      <tbody>
+        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 1 — IR取得・データ抽出</td></tr>
+        <tr><td>1</td><td>IRプレスリリース取得</td><td>BusinessWire / GlobeNewswire等から web_search → web_fetch。Q単独＋FY通年の両方が必要。</td><td></td></tr>
+        <tr><td>2</td><td>数値抽出</td><td>Revenue, Gross Profit, GAAP Net Income, Non-GAAP Net Income, Non-GAAP EPS, Op Cashflow, Total Equity, Diluted Shares</td><td><a href="#formulas">§09</a></td></tr>
+
+        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 2 — 書式準備（値入力の前に実施）</td></tr>
+        <tr><td>3</td><td><strong>number_format コピー</strong></td><td>入力対象のQ列・FY列すべてについて、<strong>同行の直前Q列（Col 43等）</strong>から <code>number_format</code> をコピー。特にGross Margin行は <code>#,##0.00</code> であること確認（<code>0.0%</code> になっている場合がある）。</td><td><a href="#lessons">§14-A.3</a></td></tr>
+        <tr><td>4</td><td><strong>フォントコピー</strong></td><td>入力対象のQ列は <code>copy(ws.cell(row, col_prev).font)</code> でフォントをコピー。<br>FY列は同じフォントに <code>bold=True</code>, <code>size=12</code> を追加。<br><span style="color:var(--danger)">自分でFont()を新規作成しない。必ず既存セルからcopy()する。</span></td><td><a href="#lessons">§14-B.6</a></td></tr>
+
+        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 3 — Actual値入力</td></tr>
+        <tr><td>5</td><td>Actual行に値入力</td><td>EPS, Revenue, Gross Margin, Net Income (GAAP), Non-GAAP NI, Op CF, Total Equity, Diluted Shares</td><td><a href="#formulas">§09</a></td></tr>
+        <tr><td>6</td><td>Beat/Miss色分け</td><td>EPS・Revenue のQ列・FY列にフォント色を適用。Beat=既存緑（<code>FF0EA600</code>）、Miss=既存赤（<code>FFFF0000</code>）。<strong>セル塗りつぶしではなくフォント色</strong>。</td><td><a href="#guidance">§07</a></td></tr>
+        <tr><td>7</td><td>数式セル検証</td><td>recalc.py で % Gross Margin, % NI, EPS(GAAP), OpCFPS, BPS等の計算結果を検証。</td><td></td></tr>
+
+        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 4 — メタデータ入力</td></tr>
+        <tr><td>8</td><td><strong>Actual日付更新</strong></td><td>Actual行の C8（Estimate日付列）を<strong>決算発表日</strong>に更新。黄色を解除。</td><td></td></tr>
+        <tr><td>9</td><td><strong>次回決算予定日</strong></td><td>次Q ヘッダー行の C6 に予想発表日を入力。黄色を解除。C8は日付未定なら<strong>黄色のまま</strong>。</td><td></td></tr>
+        <tr><td>10</td><td><strong>Date / U.S. 10Y / Stock price</strong></td><td>ブロック下部の3行（Date, U.S. 10Y, Stock price）のQ列・FY列に値を入力。書式・フォントは同行のCol 43からcopy()。</td><td></td></tr>
+        <tr><td>11</td><td><strong>ガイダンス入力</strong></td><td>Actual行の次Q列・FY列にガイダンス中央値を入力。色分けは<a href="#guidance">§07</a>参照。</td><td><a href="#guidance">§07</a></td></tr>
+
+        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 5 — 黄色セル管理・検証・出力</td></tr>
+        <tr><td>12</td><td><strong>黄色セル管理</strong></td><td>値を入れたセル → 黄色解除。値が不明なセル → 黄色維持。<strong>値を入れたのに黄色を残さない。値がないのに黄色を消さない。</strong></td><td></td></tr>
+        <tr><td>13</td><td>最終検証</td><td>全入力セルのフォント名・サイズ・色・太字・number_formatを Col 43と比較して一致確認。</td><td></td></tr>
+        <tr><td>14</td><td>ファイル出力</td><td>Highlights MD → Summary CSV → xlsx を出力。</td><td><a href="#workflow-trigger">§15</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert alert-danger" style="margin-top:16px">
+    <div class="alert-title">最重要ルール — フォントと書式は「コピー」が鉄則</div>
+    <p>openpyxlでFont()を新規作成すると、フォント名（Arial→Cambria）、色コード（<code>0EA600</code>→<code>22C55E</code>）、サイズ（12→11）が既存セルと不一致になる。<strong>必ず <code>copy()</code> で直前Q列のフォントを引き継ぐ。</strong></p>
+    <pre><code>from copy import copy
+# Q列：直前Qのフォントをそのままコピー
+ws.cell(row, col_q4).font = copy(ws.cell(row, col_q3).font)
+# FY列：コピー後にbold=True, size=12に変更
+ref = ws.cell(row, col_q3).font
+ws.cell(row, col_fy).font = Font(
+    name=ref.name, size=12, bold=True,
+    color=copy(ref.color) if ref.color else None
+)</code></pre>
   </div>
 
   <div class="alert alert-warning">
@@ -604,15 +652,33 @@ li {
   <h2><span class="num">07</span>ガイダンスの取り扱い</h2>
   <p>企業が提示するガイダンス（次Q・通年の見通し）は、Actual行の未来Q列に転記する。</p>
 
-  <h3>色分けルール</h3>
+  <h3>入力値</h3>
   <div class="card">
-    <p>
-      <span class="color-box color-green"></span><strong>緑</strong>：ガイダンスがコンセンサス予想を上回る（Beat）<br>
-      <span class="color-box color-red"></span><strong>赤</strong>：ガイダンスがコンセンサス予想を下回る（Miss）
-    </p>
-    <p style="margin-top:12px;color:var(--text-dim)">
-      比較対象は、Actual行直前の最新Estimate行の同列の値。
-    </p>
+    <p>ガイダンスがレンジ（例：$1.06–$1.07）の場合は<strong>中央値</strong>を入力する。<br>
+    例：$1.06–$1.07 → <code>1.065</code>、$4.78–$4.90 → <code>4.84</code></p>
+  </div>
+
+  <h3>色分けルール（フォント色）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th style="width:200px">条件</th><th>フォント色</th><th>例</th></tr></thead>
+      <tbody>
+        <tr><td>中央値 &gt; コンセンサス</td><td><span class="color-box color-green"></span><strong>緑（Beat）</strong></td><td>ガイダンス 1,362 vs コンセンサス 1,360</td></tr>
+        <tr><td>中央値 = コンセンサス</td><td><strong>黒（一致）</strong>— 色なし</td><td>ガイダンス 4.84 vs コンセンサス 4.84</td></tr>
+        <tr><td>中央値 &lt; コンセンサス</td><td><span class="color-box color-red"></span><strong>赤（Miss）</strong></td><td>ガイダンス 1.065 vs コンセンサス 1.07</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:12px">
+    <div class="alert-title">比較対象</div>
+    Actual行直前の最新Estimate行の同列の値（Earnings Avg. / Revenue Avg.）。<br>
+    色はフォント色で表現する（塗りつぶしではない）。FY列は太字12ptのまま色を変える。
+  </div>
+
+  <h3>Actual行に既存値がある場合の注意</h3>
+  <div class="card">
+    <p>Actual行の未来Q列に既に数式やハードコード値が入っている場合がある。これは<strong>前回決算時に入力されたガイダンス中央値</strong>（例：<code>=(3.7+3.72)/2</code>）の可能性が高い。確認してからActual値で上書きする。</p>
   </div>
 </section>
 
@@ -796,6 +862,26 @@ python scripts/recalc.py output.xlsx
     <div class="alert-title">鉄則 6 — 分析は別シートで</div>
     メインシートはデータ蓄積専用。銘柄別分析・比較・グラフ等はメインシートの構造に影響を与えない別シートで展開する。
   </div>
+
+  <div class="alert alert-danger">
+    <div class="alert-title">鉄則 7 — フォントは既存セルからcopy()する</div>
+    openpyxlで <code>Font()</code> を新規作成すると、フォント名（Arial→Cambria）、色コード（<code>0EA600</code>→<code>22C55E</code>）、サイズ等が既存と不一致になる。<strong>必ず同行の直前Q列から <code>copy(ref.font)</code></strong> で引き継ぐ。色を変える場合も、ベースはcopy()で作ってからcolorだけ変更する。
+  </div>
+
+  <div class="alert alert-danger">
+    <div class="alert-title">鉄則 8 — FY列は12pt太字、Q列は11pt</div>
+    FY年間列（Col 40, 45, 49等）のデータ行はすべて <strong>Arial 12pt bold</strong>。Q四半期列は <strong>Arial 11pt</strong>（太字なし）。この規則は全銘柄共通。Date/10Y行はFYでも11pt（Stock priceは12pt bold）。
+  </div>
+
+  <div class="alert alert-warning">
+    <div class="alert-title">鉄則 9 — number_format は直前Q列からコピー</div>
+    特にGross Margin行は <code>#,##0.00</code> であるべきところが <code>0.0%</code> になっていることが多い。<strong>値入力の前に</strong>同行の直前Q列からフォーマットをコピーする。
+  </div>
+
+  <div class="alert alert-warning">
+    <div class="alert-title">鉄則 10 — 黄色セルは値と連動して管理する</div>
+    値を入力したセル → 黄色<strong>解除</strong>。値が未定のセル → 黄色<strong>維持</strong>。入力済みなのに黄色が残る、未入力なのに黄色が消える、はどちらもNG。
+  </div>
 </section>
 
 <!-- ═══ 12. 収録銘柄一覧 ═══ -->
@@ -915,6 +1001,34 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
     <p>CRWDはFY2026 Q2からNon-GAAP税率を22.5% → 21.0%に変更（One Big Beautiful Bill Act）。前年比較やEPS推移を見る際に税率変更の影響を考慮する必要がある。</p>
     <p style="margin-top:8px;color:var(--text-dim)">このような会計方針変更はHighlights DB（Markdown §6）に記録する。</p>
   </div>
+
+  <h4>6. フォント不一致トラップ（Cambria / 色コード / サイズ）</h4>
+  <div class="card">
+    <p>初回入力時、openpyxlの <code>Font(name='Cambria', color='22C55E')</code> で書いたため、既存セルの <code>Arial / 0EA600</code> と不一致になった。さらにFY列を11ptで作成したが、正しくは12pt太字だった。</p>
+    <div class="alert alert-danger" style="margin-top:12px">
+      <div class="alert-title">原因と対策</div>
+      <p><strong>原因</strong>：Font()を新規作成すると、openpyxlのデフォルト値（Cambria等）が混入する。<br>
+      <strong>対策</strong>：<code>copy(ws.cell(row, col_prev).font)</code> で直前Q列のフォントを丸ごとコピーしてからcolorやboldだけ変更する。<strong>→ 鉄則 7・8 として確立</strong></p>
+    </div>
+  </div>
+
+  <h4>7. 黄色セル管理の誤り</h4>
+  <div class="card">
+    <p>次Q（1Q FY27）のEstimate日付セル（Row 366 C8）の黄色を値が空のまま解除してしまった。</p>
+    <p style="margin-top:8px"><strong>ルール</strong>：黄色 = 「値が未定」のマーク。値を入力したら解除、値がないなら維持。<strong>→ 鉄則 10 として確立</strong></p>
+  </div>
+
+  <h4>8. メタデータ行（Date / 10Y / Stock price）の入力漏れ</h4>
+  <div class="card">
+    <p>Actual入力時にブロック下部の Date（Row 388）、U.S. 10Y（Row 389）、Stock price（Row 390）の入力が漏れていた。これらのセルには以前の数式（<code>=AQ388</code> 等、Q3参照）が入っており、実値に書き換える必要がある。</p>
+    <p style="margin-top:8px"><strong>対策</strong>：Actual更新の Step 10 として明記。<strong>→ §06チェックリスト Phase 4 に組み込み済み</strong></p>
+  </div>
+
+  <h4>9. ガイダンス色判定 — 完全一致は「黒」</h4>
+  <div class="card">
+    <p>FY27 EPSガイダンス中央値 $4.84 がコンセンサス $4.84 と完全一致。このケースは緑でも赤でもなく<strong>黒（色なし）</strong>。</p>
+    <p style="margin-top:8px"><strong>→ §07 に3パターン（緑・黒・赤）として明記済み</strong></p>
+  </div>
 </section>
 
 <!-- ═══ 15. 決算更新ワークフロー ═══ -->
@@ -948,10 +1062,11 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
       <thead><tr><th style="width:50px">Step</th><th style="width:80px">担当</th><th>操作</th><th>備考</th></tr></thead>
       <tbody>
         <tr><td>1</td><td>まっち</td><td>Cに「○○の決算出た、更新して」と伝える</td><td><strong>スクショ不要</strong>。CがIRプレスリリースを取得する。Yahoo速報値のスクショは二重チェック用で有効だが必須ではない</td></tr>
-        <tr><td>2</td><td>C</td><td>IRからActual数値を取得 → xlsx Actual行に入力</td><td>Beat/Miss色分け、書式チェック含む</td></tr>
-        <tr><td>3</td><td>C</td><td>Highlights Markdown作成</td><td><code>YYYY-QN-TICKER.md</code></td></tr>
-        <tr><td>4</td><td>C</td><td>Summary CSV追記</td><td><code>summary-YYYYQN.csv</code></td></tr>
-        <tr><td>5</td><td>まっち</td><td>出力ファイルをダウンロード → 下記チェックリスト実行</td><td></td></tr>
+        <tr><td>2</td><td>C</td><td>IRからActual数値を取得 → xlsx Actual行に入力</td><td>§06の14ステップを全実行。<strong>書式・フォント・黄色管理含む</strong></td></tr>
+        <tr><td>3</td><td>C</td><td>メタデータ入力：日付・ガイダンス・10Y・株価</td><td>§06 Phase 4 の全項目</td></tr>
+        <tr><td>4</td><td>C</td><td>Highlights Markdown作成</td><td><code>YYYY-QN-TICKER.md</code></td></tr>
+        <tr><td>5</td><td>C</td><td>Summary CSV追記</td><td><code>summary-YYYYQN.csv</code></td></tr>
+        <tr><td>6</td><td>まっち</td><td>出力ファイルをダウンロード → 下記チェックリスト実行</td><td></td></tr>
       </tbody>
     </table>
   </div>
@@ -1003,7 +1118,7 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
 
 <!-- ═══ Footer ═══ -->
 <footer style="margin-top:80px;padding-top:32px;border-top:1px solid var(--border);text-align:center;color:var(--text-dim);font-size:13px;">
-  決算チェック 運用マニュアル v1.2 — 2026-03-04 更新<br>
+  決算チェック 運用マニュアル v1.3 — 2026-03-04 更新<br>
   <span style="font-family:'JetBrains Mono',monospace;font-size:11px;">Maintained by まっち &amp; Claude</span>
 </footer>
 
