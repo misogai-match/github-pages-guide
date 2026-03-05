@@ -372,7 +372,7 @@ li {
   <div class="header-label">Operations Manual</div>
   <h1>決算チェック 運用マニュアル</h1>
   <div class="header-meta">
-    決算チェック_20260304.xlsx &mdash; Version <span>1.3</span> &mdash; <span>2026-03-04</span>
+    決算チェック_20260305.xlsx &mdash; Version <span>1.4</span> &mdash; <span>2026-03-05</span>
   </div>
 </header>
 
@@ -601,8 +601,8 @@ li {
       <thead><tr><th style="width:30px">#</th><th style="width:160px">作業</th><th>詳細</th><th style="width:120px">参照</th></tr></thead>
       <tbody>
         <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 1 — IR取得・データ抽出</td></tr>
-        <tr><td>1</td><td>IRプレスリリース取得</td><td>BusinessWire / GlobeNewswire等から web_search → web_fetch。Q単独＋FY通年の両方が必要。</td><td></td></tr>
-        <tr><td>2</td><td>数値抽出</td><td>Revenue, Gross Profit, GAAP Net Income, Non-GAAP Net Income, Non-GAAP EPS, Op Cashflow, Total Equity, Diluted Shares</td><td><a href="#formulas">§09</a></td></tr>
+        <tr><td>1</td><td>IRプレスリリース取得</td><td>BusinessWire / GlobeNewswire / PRNewswire等から web_search → web_fetch。<br><strong>403/robotsブロック時</strong>：まっちさんにPress Releaseスクショを依頼する（<a href="#lessons">§14-C.1</a>参照）。<br>必要テーブル：① P&amp;L（Condensed Statements of Operations）② BS（Balance Sheet）③ Non-GAAP reconciliation</td><td></td></tr>
+        <tr><td>2</td><td>数値抽出</td><td>Revenue, Gross Profit (GAAP &amp; Non-GAAP), GAAP Net Income, Non-GAAP Net Income, Non-GAAP EPS, Op Cashflow, Total Equity, Diluted Shares (GAAP weighted-average)。<br><strong>Diluted Sharesは逆算ではなくIR記載値を使用する。</strong></td><td><a href="#formulas">§09</a></td></tr>
 
         <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 2 — 書式準備（値入力の前に実施）</td></tr>
         <tr><td>3</td><td><strong>number_format コピー</strong></td><td>入力対象のQ列・FY列すべてについて、<strong>同行の直前Q列（Col 43等）</strong>から <code>number_format</code> をコピー。特にGross Margin行は <code>#,##0.00</code> であること確認（<code>0.0%</code> になっている場合がある）。</td><td><a href="#lessons">§14-A.3</a></td></tr>
@@ -610,7 +610,7 @@ li {
 
         <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 3 — Actual値入力</td></tr>
         <tr><td>5</td><td>Actual行に値入力</td><td>EPS, Revenue, Gross Margin, Net Income (GAAP), Non-GAAP NI, Op CF, Total Equity, Diluted Shares</td><td><a href="#formulas">§09</a></td></tr>
-        <tr><td>6</td><td>Beat/Miss色分け</td><td>EPS・Revenue のQ列・FY列にフォント色を適用。Beat=既存緑（<code>FF0EA600</code>）、Miss=既存赤（<code>FFFF0000</code>）。<strong>セル塗りつぶしではなくフォント色</strong>。</td><td><a href="#guidance">§07</a></td></tr>
+        <tr><td>6</td><td>Beat/Miss色分け</td><td>EPS・Revenue のQ列・FY列にフォント色を適用。<strong>緑・赤の色コードは銘柄ごとに異なる</strong>（例：CRWD=<code>0EA600</code>、OKTA=<code>00B050</code>）。必ず同銘柄の既存Beat/Missセルからcopy()して一致させる。<strong>セル塗りつぶしではなくフォント色</strong>。</td><td><a href="#guidance">§07</a></td></tr>
         <tr><td>7</td><td>数式セル検証</td><td>recalc.py で % Gross Margin, % NI, EPS(GAAP), OpCFPS, BPS等の計算結果を検証。</td><td></td></tr>
 
         <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 4 — メタデータ入力</td></tr>
@@ -882,6 +882,16 @@ python scripts/recalc.py output.xlsx
     <div class="alert-title">鉄則 10 — 黄色セルは値と連動して管理する</div>
     値を入力したセル → 黄色<strong>解除</strong>。値が未定のセル → 黄色<strong>維持</strong>。入力済みなのに黄色が残る、未入力なのに黄色が消える、はどちらもNG。
   </div>
+
+  <div class="alert alert-danger">
+    <div class="alert-title">鉄則 11 — Beat/Miss の緑色コードは銘柄ごとに異なる</div>
+    緑色の RGB は全銘柄共通ではない（例：CRWD=<code>0EA600</code>、OKTA=<code>00B050</code>）。色コードを固定値で書くと既存セルと不一致になる。<strong>必ず同銘柄の既存Beat/Missセルの色をcopy()する。</strong>
+  </div>
+
+  <div class="alert alert-warning">
+    <div class="alert-title">鉄則 12 — Diluted SharesはIR記載値を使う</div>
+    GAAP Net Income ÷ GAAP Diluted EPS で逆算すると、端数処理や転換社債の影響で正確な値にならない。Press Releaseの「Weighted-average shares used to compute net income per share, diluted」をそのまま使用する。
+  </div>
 </section>
 
 <!-- ═══ 12. 収録銘柄一覧 ═══ -->
@@ -1029,6 +1039,92 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
     <p>FY27 EPSガイダンス中央値 $4.84 がコンセンサス $4.84 と完全一致。このケースは緑でも赤でもなく<strong>黒（色なし）</strong>。</p>
     <p style="margin-top:8px"><strong>→ §07 に3パターン（緑・黒・赤）として明記済み</strong></p>
   </div>
+
+  <h3>14-C. OKTA — Q4 FY2026（3回目 2026-03-05）</h3>
+
+  <h4>1. IRサイト403ブロック → スクショで解決</h4>
+  <div class="card">
+    <p>investor.okta.com は403エラー、BusinessWireはrobots.txtでブロック。web_search のスニペットからP&amp;L要約（EPS, Revenue, NI, CF）は取得できるが、以下は取得不可：</p>
+    <p style="margin-top:8px">① <strong>Balance Sheet</strong>（Total Equity）<br>② <strong>Non-GAAP reconciliation</strong>（Non-GAAP Gross Profit）<br>③ <strong>Diluted Shares</strong>（正確な加重平均株式数）</p>
+    <div class="alert alert-info" style="margin-top:12px">
+      <div class="alert-title">対策 — Press Releaseスクショ共有</div>
+      <p>まっちさんにIRサイトのPress Releaseページのスクショ共有を依頼する。必要なテーブル3つ：</p>
+      <p style="margin-top:4px"><strong>① Condensed Statements of Operations</strong>（Revenue → Gross Profit → Net Income → Diluted Shares）<br>
+      <strong>② Condensed Balance Sheets</strong>（Total Stockholders' Equity）<br>
+      <strong>③ Non-GAAP Reconciliation</strong>（Non-GAAP Gross Profit / Margin）</p>
+      <p style="margin-top:8px;color:var(--text-dim)">→ §15-D トリガー早見表に「スクショ共有」を追加済み</p>
+    </div>
+  </div>
+
+  <h4>2. Beat/Miss緑色コードが銘柄ごとに異なる</h4>
+  <div class="card">
+    <p>CRWDでは <code>FF0EA600</code> を使用したが、OKTAの既存Beatセルは <code>FF00B050</code> だった。初回入力時にCRWDの緑を使ってしまい不一致が発生。</p>
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th>銘柄</th><th>Beat 緑</th><th>Miss 赤</th></tr></thead>
+        <tbody>
+          <tr><td>NCLH</td><td><code>00A600</code></td><td><code>FF0000</code></td></tr>
+          <tr><td>CRWD</td><td><code>0EA600</code></td><td><code>FF0000</code></td></tr>
+          <tr><td>OKTA</td><td><code>00B050</code></td><td><code>FF0000</code></td></tr>
+          <tr><td>AVGO</td><td><code>0EA600</code></td><td><code>FF0000</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:8px"><strong>→ 鉄則 11 として確立。色コードを固定値で書かず、必ず同銘柄の既存セルからcopy()する。</strong></p>
+  </div>
+
+  <h4>3. Diluted Sharesは逆算ではなくIR記載値を使う</h4>
+  <div class="card">
+    <p>初回入力時に GAAP NI $63M ÷ Diluted EPS $0.35 = 180M と逆算したが、IR記載の正確な値は 180,450（千株）= 180.450M。端数が異なる。</p>
+    <p style="margin-top:8px"><strong>→ 鉄則 12 として確立。Press Releaseの「Weighted-average shares used to compute net income per share, diluted」をそのまま使用する。</strong></p>
+  </div>
+
+  <h4>4. OKTAはGAAP / Non-GAAP両方のGross Marginが存在する</h4>
+  <div class="card">
+    <p>OKTAのActual行にはGross Margin（Row 1226, GAAP）とGross Margin Non-GAAP（Row 1228）の2行がある。GAAP GPはP&amp;L、Non-GAAP GPはreconciliation tableからそれぞれ取得が必要。</p>
+    <p style="margin-top:8px;color:var(--text-dim)">Q4: GAAP $593M / Non-GAAP $624M（差額はSBC $19M + 償却 $12M）<br>
+    FY: GAAP $2,258M / Non-GAAP $2,385M</p>
+  </div>
+
+  <h4>5. OKTAのNon-GAAP税率変更（FY2027から21%）</h4>
+  <div class="card">
+    <p>FY2027ガイダンスでNon-GAAP tax rate が 26% → 21% に変更（One Big Beautiful Bill Act）。CRWDと同じ法改正による変更。前年EPS比較時に税率差を考慮する必要がある。</p>
+  </div>
+
+  <h3>14-D. AVGO — Q1 FY2026（4回目 2026-03-05）</h3>
+
+  <h4>1. AVGOの決算期ずれ（11月–10月FY）</h4>
+  <div class="card">
+    <p>AVGOのFiscal Yearは11月〜10月。Q1 FY2026 = Nov 2025–Feb 2026。xlsx上のカレンダーQ（2025Q4）とFY Qが一致しない。</p>
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th>銘柄</th><th>FY期間</th><th>xlsx上の2025Q4にあたるFY Q</th></tr></thead>
+        <tbody>
+          <tr><td>OKTA</td><td>Feb–Jan</td><td>Q4 FY2026</td></tr>
+          <tr><td>CRWD</td><td>Feb–Jan</td><td>Q4 FY2026</td></tr>
+          <tr><td>AVGO</td><td>Nov–Oct</td><td>Q1 FY2026</td></tr>
+          <tr><td>NCLH</td><td>Jan–Dec</td><td>Q4 2025（暦年一致）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:8px;color:var(--text-dim)">Highlights MD のファイル名は <code>2025-Q4-AVGO.md</code>（カレンダーQ基準）とし、中身に「Q1 FY2026」と明記する。</p>
+  </div>
+
+  <h4>2. AVGOの数値単位（百万ドル、ただしSharesは百万株）</h4>
+  <div class="card">
+    <p>AVGOのPress Releaseは全て百万ドル表記。Sharesも百万株（例：4,888M shares = 4,888）。xlsxのSharesセルもそのまま 4888 と入力。</p>
+    <p style="margin-top:8px;color:var(--text-dim)">他社（OKTA等）は千株表記（180,450 thousands = 180.450M → xlsxには180.450と入力）のケースもあるため、企業ごとにIRの表記単位を確認する。</p>
+  </div>
+
+  <h4>3. AVGOはEPSガイダンスなし（EBITDA marginのみ）</h4>
+  <div class="card">
+    <p>AVGOのQ2ガイダンスは Revenue ~$22B と Adjusted EBITDA margin ~68% のみ。EPSガイダンスを出さないため、EPS行のガイダンス列は空欄のまま。Revenue行のみ入力する。</p>
+  </div>
+
+  <h4>4. AVGOのGross Margin行はGAAP（Total cost of revenueベース）</h4>
+  <div class="card">
+    <p>AVGOのP&amp;LにはGross marginが明記されている（$13,157M）。ただしcost of revenueに「Amortization of acquisition-related intangible assets」$1,462M と「Restructuring charges」$13M が含まれており、Non-GAAPでは調整が必要。AVGOのxlsxにはGAAP行のみあるため、GAAP値をそのまま入力。</p>
+  </div>
 </section>
 
 <!-- ═══ 15. 決算更新ワークフロー ═══ -->
@@ -1106,8 +1202,16 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
         <tr><td>Yahoo Financeスクショ共有</td><td>xlsx Estimate行に転記</td><td>スクショ必須</td></tr>
         <tr><td>「マニュアル更新して」</td><td>earnings-check-manual.html 更新</td><td>なし</td></tr>
         <tr><td>「○○のガイダンス入れて」</td><td>Actual行の未来Q列にガイダンス値を入力</td><td>なし（Cが検索）</td></tr>
+        <tr><td style="background:#fff3cd">CからPress Releaseスクショ依頼が来た</td><td>—（Cが入力再開）</td><td><strong>IRサイトのスクショ共有</strong>（P&amp;L、BS、Non-GAAP reconciliation）</td></tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:12px">
+    <div class="alert-title">IRアクセスブロック時のフロー</div>
+    <p>多くのIRサイト（investor.okta.com、businesswire.com等）は403/robotsでCからのアクセスをブロックする。web_searchのスニペットからP&amp;L要約は取れるが、Balance Sheet・Non-GAAP reconciliation・Diluted Shares等の詳細テーブルは取得できない。</p>
+    <p style="margin-top:8px"><strong>Cが「Press Releaseのスクショを共有してください」と依頼したら</strong>、IRサイトの決算プレスリリースから以下3テーブルのスクショを共有する：</p>
+    <p style="margin-top:4px">① Condensed Statements of Operations（P&amp;L）<br>② Condensed Balance Sheets<br>③ Non-GAAP Reconciliation（Gross Profit / Net Income）</p>
   </div>
 
   <div class="alert alert-danger" style="margin-top:24px">
@@ -1118,7 +1222,7 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
 
 <!-- ═══ Footer ═══ -->
 <footer style="margin-top:80px;padding-top:32px;border-top:1px solid var(--border);text-align:center;color:var(--text-dim);font-size:13px;">
-  決算チェック 運用マニュアル v1.3 — 2026-03-04 更新<br>
+  決算チェック 運用マニュアル v1.4 — 2026-03-05 更新<br>
   <span style="font-family:'JetBrains Mono',monospace;font-size:11px;">Maintained by まっち &amp; Claude</span>
 </footer>
 
