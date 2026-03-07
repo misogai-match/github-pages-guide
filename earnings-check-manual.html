@@ -372,7 +372,7 @@ li {
   <div class="header-label">Operations Manual</div>
   <h1>決算チェック 運用マニュアル</h1>
   <div class="header-meta">
-    決算チェック_20260306.xlsx &mdash; Version <span>1.6</span> &mdash; <span>2026-03-07</span>
+    決算チェック_20260306.xlsx &mdash; Version <span>1.7</span> &mdash; <span>2026-03-07</span>
   </div>
 </header>
 
@@ -1268,6 +1268,7 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
         <tr><td>「マニュアル更新して」</td><td>earnings-check-manual.html 更新</td><td>なし</td></tr>
         <tr><td>「○○のガイダンス入れて」</td><td>Actual行の未来Q列にガイダンス値を入力</td><td>なし（Cが検索）</td></tr>
         <tr><td style="background:#fff3cd">CからPress Releaseスクショ依頼が来た</td><td>—（Cが入力再開）</td><td><strong>IRサイトのスクショ共有</strong>（P&amp;L、BS、Non-GAAP reconciliation）</td></tr>
+        <tr><td style="background:#d4edda">Cから「deploy.bat を実行してください」と表示された</td><td>—（Cの作業は完了済み）</td><td>なし — ファイルをダウンロードして <code>deploy.bat</code> を実行</td></tr>
       </tbody>
     </table>
   </div>
@@ -1349,6 +1350,16 @@ set "REPO_PAGES=C:\GitHub\github-pages-guide"</code></pre>
     <div class="alert-title">注意：deploy.bat で処理されないファイル</div>
     <p><code>決算チェック_YYYYMMDD.xlsx</code> と <code>earnings-check-manual.html</code>（プロジェクト用）は<strong>手動でClaudeプロジェクトにアップロード</strong>が必要。これはClaude UIの制約のため自動化できない。</p>
   </div>
+
+  <div class="alert alert-info" style="margin-top:16px">
+    <div class="alert-title">Cのルール：deploy.bat リマインド</div>
+    <p>Cは <code>.html</code> / <code>.md</code> / <code>.csv</code> ファイルを出力するたびに、以下のリマインドメッセージを表示する：</p>
+    <pre style="margin-top:8px;background:#0d1117;color:#3fb950;padding:12px;border-radius:6px;font-size:13px"><code>All files ready. Please:
+1. Download all files
+2. Run deploy.bat
+3. Upload xlsx + manual to Claude Project</code></pre>
+    <p style="margin-top:8px;color:var(--text-dim)">これにより、まっちさんがGitHubへのpushを忘れることを防ぐ。</p>
+  </div>
 </section>
 
 <!-- ═══ 16. 自動化ロードマップ ═══ -->
@@ -1416,7 +1427,7 @@ set "REPO_PAGES=C:\GitHub\github-pages-guide"</code></pre>
 
 <!-- ═══ Footer ═══ -->
 <footer style="margin-top:80px;padding-top:32px;border-top:1px solid var(--border);text-align:center;color:var(--text-dim);font-size:13px;">
-  決算チェック 運用マニュアル v1.6 — 2026-03-07 更新<br>
+  決算チェック 運用マニュアル v1.7 — 2026-03-07 更新<br>
   <span style="font-family:'JetBrains Mono',monospace;font-size:11px;">Maintained by まっち &amp; Claude</span>
 </footer>
 
