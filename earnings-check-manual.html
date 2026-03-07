@@ -372,7 +372,7 @@ li {
   <div class="header-label">Operations Manual</div>
   <h1>決算チェック 運用マニュアル</h1>
   <div class="header-meta">
-    決算チェック_20260306.xlsx &mdash; Version <span>1.7</span> &mdash; <span>2026-03-07</span>
+    決算チェック_20260307_2.xlsx &mdash; Version <span>1.8</span> &mdash; <span>2026-03-07</span>
   </div>
 </header>
 
@@ -393,9 +393,6 @@ li {
     <li><a href="#rules">運用ルール・鉄則</a></li>
     <li><a href="#tickers">収録銘柄一覧</a></li>
     <li><a href="#versioning">バージョン管理</a></li>
-    <li><a href="#lessons">実運用で判明した注意事項</a></li>
-    <li><a href="#workflow-trigger">決算更新ワークフロー — トリガーとチェックリスト</a></li>
-    <li><a href="#automation-roadmap">自動化ロードマップ</a></li>
   </ol>
 </nav>
 
@@ -529,6 +526,7 @@ li {
   <h2><span class="num">05</span>Estimate更新フロー（毎週末）</h2>
   <p>決算発表週の前の土曜日または日曜日に実施。</p>
 
+  <h3>05-A. データ取得</h3>
   <div class="flow">
     <div class="flow-step">
       <span class="step-num">Step 1</span>
@@ -542,23 +540,117 @@ li {
       Revenue Estimate → <strong>Avg. Estimate</strong><br>
       Current Qtr / Next Qtr / Current Year / Next Year
     </div>
-    <span class="flow-arrow">→</span>
+  </div>
+
+  <div class="alert alert-info">
+    <div class="alert-title">Claudeがwebアクセス不可の場合</div>
+    まっちさんが Yahoo Finance Analysis ページのスクリーンショットを共有する。Earnings Estimate テーブルと Revenue Estimate テーブルの両方が写っている状態で撮影。
+  </div>
+
+  <h3>05-B. 行挿入（まっちさん作業）</h3>
+  <div class="card">
+    <p>Actual行の直前に合計 <strong>4行（2行 × 2セット）</strong> を挿入する。</p>
+    <p style="margin-top:8px">行挿入はExcelまたはLibreOffice上でまっちさんが実施（→ <a href="#row-insert">§08参照</a>）。<br>
+    挿入後、各行のラベル（Col I〜K）・決算期（Col G）・黄色セルもまっちさんがセットしてからClaude に渡す。</p>
+  </div>
+
+  <h3>05-C. 4行構造</h3>
+  <p>Actual行直前に以下の4行が並ぶ：</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>行</th><th>役割</th><th>Col F（決算日）</th><th>Col G（決算期）</th><th>Col H（入力日）</th><th>データ列</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>今回 EPS</strong></td>
+          <td>決算直前コンセンサス</td>
+          <td rowspan="2">今回決算日</td>
+          <td rowspan="2">今回Q</td>
+          <td rowspan="2">更新日</td>
+          <td rowspan="2">Yahoo Finance Avg. Estimate</td>
+        </tr>
+        <tr>
+          <td><strong>今回 Rev</strong></td>
+          <td>決算直前コンセンサス</td>
+        </tr>
+        <tr>
+          <td><strong>次々回 EPS</strong></td>
+          <td>プレースホルダー</td>
+          <td rowspan="2" style="color:var(--yellow)">空欄＆黄色</td>
+          <td rowspan="2">次々回Q</td>
+          <td rowspan="2" style="color:var(--yellow)">空欄＆黄色</td>
+          <td rowspan="2">今回行のコピー（値・色とも）</td>
+        </tr>
+        <tr>
+          <td><strong>次々回 Rev</strong></td>
+          <td>プレースホルダー</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card card-alt">
+    <p><strong>なぜ次々回プレースホルダーが必要か：</strong><br>
+    決算発表後、Actual行の値と「今回行」を比較して Beat/Miss を判定する。その時点で次の決算サイクル用のEstimate行がないと L/L 数式が参照先を失う。プレースホルダーは今回コンセンサスのコピーで仮置きし、次回のEstimate更新時に最新値で上書きされる。</p>
+  </div>
+
+  <h3>05-D. コンセンサス入力（Claude作業）</h3>
+  <div class="flow">
     <div class="flow-step">
       <span class="step-num">Step 3</span>
-      Actual行の直前に<strong>2行挿入</strong><br>
-      （LibreOffice経由 → <a href="#row-insert">§08参照</a>）
+      今回行（EPS/Rev）に<br>
+      Avg. Estimate を入力<br>
+      Col H に更新日を入力
     </div>
     <span class="flow-arrow">→</span>
     <div class="flow-step">
       <span class="step-num">Step 4</span>
-      新行に記載日（Col H）、<br>
-      Earnings (Avg.) / Revenue (Avg.) を入力
+      <strong>フォント色を設定</strong><br>
+      前回Estimate行と比較して<br>
+      緑（↑）/ 赤（↓）/ 黒（＝）
     </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <span class="step-num">Step 5</span>
+      次々回行に<strong>今回行を完全コピー</strong><br>
+      値・フォント色ともそのまま
+    </div>
+  </div>
+
+  <h3>05-E. Estimate色分けルール</h3>
+  <div class="card">
+    <p>コンセンサス値のフォント色は、<strong>直前のEstimate行（同列）との比較</strong>で決定する：</p>
+    <p style="margin-top:12px">
+      <span class="color-box color-green"></span><strong>緑</strong>（<code>0EA600</code>）：今回 &gt; 前回（コンセンサス上方修正）<br>
+      <span class="color-box color-red"></span><strong>赤</strong>（<code>FF0000</code>）：今回 &lt; 前回（コンセンサス下方修正）<br>
+      <strong>黒</strong>（default）：今回 ＝ 前回（変化なし）
+    </p>
+    <p style="margin-top:12px;color:var(--text-dim)">
+      ※ Actual行の Beat/Miss 色と同じコードだが、意味が異なる。Estimate色 = コンセンサスのトレンド変化。
+    </p>
+  </div>
+
+  <h3>05-F. 出力後の手順（まっちさん作業）</h3>
+  <div class="card">
+    <p>Cがxlsx・htmlファイルを出力したら、以下を実行する：</p>
+    <p style="margin-top:12px">
+      ☐ Claudeの出力から<strong>すべてのファイル</strong>をダウンロード<br>
+      ☐ デスクトップの <code>deploy.bat</code> をダブルクリック → GitHub に自動push<br>
+      ☐ <code>決算チェック_YYYYMMDD.xlsx</code> → Claudeプロジェクトにアップロード<br>
+      ☐ <code>earnings-check-manual.html</code>（更新時のみ）→ Claudeプロジェクトにアップロード
+    </p>
+  </div>
+
+  <div class="alert alert-warning">
+    <div class="alert-title">Cのルール：deploy.bat リマインド</div>
+    <p>Cは <code>.html</code> / <code>.md</code> / <code>.csv</code> ファイルを出力するたびに、以下のリマインドメッセージを表示する：</p>
+    <pre style="margin-top:8px"><code>All files ready. Please:
+1. Download all files
+2. Run deploy.bat
+3. Upload xlsx + manual to Claude Project</code></pre>
   </div>
 
   <div class="alert alert-info">
     <div class="alert-title">ポイント</div>
-    コンセンサス予想のスナップショットが時系列で蓄積され、Estimate → Actual の乖離分析が可能になる。
+    コンセンサス予想のスナップショットが時系列で蓄積され、Estimate → Actual の乖離分析が可能になる。色付きのトレンドにより、コンセンサスの上方/下方修正の流れが一目で分かる。
   </div>
 </section>
 
@@ -575,71 +667,23 @@ li {
     <span class="flow-arrow">→</span>
     <div class="flow-step">
       <span class="step-num">Step 2</span>
-      データ抽出 → Actual行入力<br>
-      <strong>書式チェック含む</strong>
+      必要データを抽出<br>
+      Revenue, Non-GAAP NI, Gross Margin,<br>
+      Net Income, Op Cashflow, Equity, Shares
     </div>
     <span class="flow-arrow">→</span>
     <div class="flow-step">
       <span class="step-num">Step 3</span>
-      メタデータ入力<br>
-      日付 / ガイダンス / 10Y / 株価
+      Actual行の該当Q列に入力<br>
+      <strong>Non-GAAP NI → EPS逆算</strong><br>
+      → <a href="#nongaap">§10参照</a>
     </div>
     <span class="flow-arrow">→</span>
     <div class="flow-step">
       <span class="step-num">Step 4</span>
-      黄色セル管理<br>
-      → 検証 → ファイル出力
+      Date, 10Y, Stock price 入力<br>
+      ガイダンスがあれば次Q列に転記
     </div>
-  </div>
-
-  <h3>06-A. Cが実行するActual更新 全ステップ</h3>
-  <div class="card">
-    <p>以下はCが毎回必ず実行する全手順。1つでも漏れると手戻りが発生する。</p>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th style="width:30px">#</th><th style="width:160px">作業</th><th>詳細</th><th style="width:120px">参照</th></tr></thead>
-      <tbody>
-        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 1 — IR取得・データ抽出</td></tr>
-        <tr><td>1</td><td>IRプレスリリース取得</td><td>BusinessWire / GlobeNewswire / PRNewswire等から web_search → web_fetch。<br><strong>403/robotsブロック時</strong>：まっちさんにPress Releaseスクショを依頼する（<a href="#lessons">§14-C.1</a>参照）。<br>必要テーブル：① P&amp;L（Condensed Statements of Operations）② BS（Balance Sheet）③ Non-GAAP reconciliation</td><td></td></tr>
-        <tr><td>2</td><td>数値抽出</td><td>Revenue, Gross Profit (GAAP &amp; Non-GAAP), GAAP Net Income, Non-GAAP Net Income, Non-GAAP EPS, Op Cashflow, Total Equity, Diluted Shares (GAAP weighted-average)。<br><strong>Diluted Sharesは逆算ではなくIR記載値を使用する。</strong></td><td><a href="#formulas">§09</a></td></tr>
-
-        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 2 — 書式準備（値入力の前に実施）</td></tr>
-        <tr><td>3</td><td><strong>number_format コピー</strong></td><td>入力対象のQ列・FY列すべてについて、<strong>同行の直前Q列（Col 43等）</strong>から <code>number_format</code> をコピー。特にGross Margin行は <code>#,##0.00</code> であること確認（<code>0.0%</code> になっている場合がある）。</td><td><a href="#lessons">§14-A.3</a></td></tr>
-        <tr><td>4</td><td><strong>フォントコピー</strong></td><td>入力対象のQ列は <code>copy(ws.cell(row, col_prev).font)</code> でフォントをコピー。<br>FY列は同じフォントに <code>bold=True</code>, <code>size=12</code> を追加。<br><span style="color:var(--danger)">自分でFont()を新規作成しない。必ず既存セルからcopy()する。</span></td><td><a href="#lessons">§14-B.6</a></td></tr>
-
-        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 3 — Actual値入力</td></tr>
-        <tr><td>5</td><td>Actual行に値入力</td><td>EPS, Revenue, Gross Margin, Net Income (GAAP), Non-GAAP NI, Op CF, Total Equity, Diluted Shares</td><td><a href="#formulas">§09</a></td></tr>
-        <tr><td>6</td><td>Beat/Miss色分け</td><td>EPS・Revenue のQ列・FY列にフォント色を適用。<strong>緑・赤の色コードは銘柄ごとに異なる</strong>（例：CRWD=<code>0EA600</code>、OKTA=<code>00B050</code>）。必ず同銘柄の既存Beat/Missセルからcopy()して一致させる。<strong>セル塗りつぶしではなくフォント色</strong>。</td><td><a href="#guidance">§07</a></td></tr>
-        <tr><td>7</td><td>数式セル検証</td><td>recalc.py で % Gross Margin, % NI, EPS(GAAP), OpCFPS, BPS等の計算結果を検証。</td><td></td></tr>
-
-        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 4 — メタデータ入力</td></tr>
-        <tr><td>8</td><td><strong>Actual日付更新</strong></td><td>Actual行の C8（Estimate日付列）を<strong>決算発表日</strong>に更新。黄色を解除。</td><td></td></tr>
-        <tr><td>9</td><td><strong>次回決算予定日</strong></td><td>次Q ヘッダー行の C6 に予想発表日を入力。黄色を解除。C8は日付未定なら<strong>黄色のまま</strong>。</td><td></td></tr>
-        <tr><td>10</td><td><strong>Date / U.S. 10Y / Stock price</strong></td><td>ブロック下部の3行（Date, U.S. 10Y, Stock price）のQ列・FY列に値を入力。書式・フォントは同行のCol 43からcopy()。</td><td></td></tr>
-        <tr><td>11</td><td><strong>ガイダンス入力</strong></td><td>Actual行の次Q列・FY列にガイダンス中央値を入力。色分けは<a href="#guidance">§07</a>参照。</td><td><a href="#guidance">§07</a></td></tr>
-
-        <tr><td colspan="4" style="background:var(--accent);color:white;font-weight:700;text-align:center">Phase 5 — 黄色セル管理・検証・出力</td></tr>
-        <tr><td>12</td><td><strong>黄色セル管理</strong></td><td>値を入れたセル → 黄色解除。値が不明なセル → 黄色維持。<strong>値を入れたのに黄色を残さない。値がないのに黄色を消さない。</strong></td><td></td></tr>
-        <tr><td>13</td><td>最終検証</td><td>全入力セルのフォント名・サイズ・色・太字・number_formatを Col 43と比較して一致確認。</td><td></td></tr>
-        <tr><td>14</td><td>ファイル出力</td><td>Highlights MD → Summary CSV → xlsx を出力。</td><td><a href="#workflow-trigger">§15</a></td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="alert alert-danger" style="margin-top:16px">
-    <div class="alert-title">最重要ルール — フォントと書式は「コピー」が鉄則</div>
-    <p>openpyxlでFont()を新規作成すると、フォント名（Arial→Cambria）、色コード（<code>0EA600</code>→<code>22C55E</code>）、サイズ（12→11）が既存セルと不一致になる。<strong>必ず <code>copy()</code> で直前Q列のフォントを引き継ぐ。</strong></p>
-    <pre><code>from copy import copy
-# Q列：直前Qのフォントをそのままコピー
-ws.cell(row, col_q4).font = copy(ws.cell(row, col_q3).font)
-# FY列：コピー後にbold=True, size=12に変更
-ref = ws.cell(row, col_q3).font
-ws.cell(row, col_fy).font = Font(
-    name=ref.name, size=12, bold=True,
-    color=copy(ref.color) if ref.color else None
-)</code></pre>
   </div>
 
   <div class="alert alert-warning">
@@ -653,33 +697,15 @@ ws.cell(row, col_fy).font = Font(
   <h2><span class="num">07</span>ガイダンスの取り扱い</h2>
   <p>企業が提示するガイダンス（次Q・通年の見通し）は、Actual行の未来Q列に転記する。</p>
 
-  <h3>入力値</h3>
+  <h3>色分けルール</h3>
   <div class="card">
-    <p>ガイダンスがレンジ（例：$1.06–$1.07）の場合は<strong>中央値</strong>を入力する。<br>
-    例：$1.06–$1.07 → <code>1.065</code>、$4.78–$4.90 → <code>4.84</code></p>
-  </div>
-
-  <h3>色分けルール（フォント色）</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th style="width:200px">条件</th><th>フォント色</th><th>例</th></tr></thead>
-      <tbody>
-        <tr><td>中央値 &gt; コンセンサス</td><td><span class="color-box color-green"></span><strong>緑（Beat）</strong></td><td>ガイダンス 1,362 vs コンセンサス 1,360</td></tr>
-        <tr><td>中央値 = コンセンサス</td><td><strong>黒（一致）</strong>— 色なし</td><td>ガイダンス 4.84 vs コンセンサス 4.84</td></tr>
-        <tr><td>中央値 &lt; コンセンサス</td><td><span class="color-box color-red"></span><strong>赤（Miss）</strong></td><td>ガイダンス 1.065 vs コンセンサス 1.07</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="alert alert-info" style="margin-top:12px">
-    <div class="alert-title">比較対象</div>
-    Actual行直前の最新Estimate行の同列の値（Earnings Avg. / Revenue Avg.）。<br>
-    色はフォント色で表現する（塗りつぶしではない）。FY列は太字12ptのまま色を変える。
-  </div>
-
-  <h3>Actual行に既存値がある場合の注意</h3>
-  <div class="card">
-    <p>Actual行の未来Q列に既に数式やハードコード値が入っている場合がある。これは<strong>前回決算時に入力されたガイダンス中央値</strong>（例：<code>=(3.7+3.72)/2</code>）の可能性が高い。確認してからActual値で上書きする。</p>
+    <p>
+      <span class="color-box color-green"></span><strong>緑</strong>：ガイダンスがコンセンサス予想を上回る（Beat）<br>
+      <span class="color-box color-red"></span><strong>赤</strong>：ガイダンスがコンセンサス予想を下回る（Miss）
+    </p>
+    <p style="margin-top:12px;color:var(--text-dim)">
+      比較対象は、Actual行直前の最新Estimate行の同列の値。
+    </p>
   </div>
 </section>
 
@@ -865,33 +891,29 @@ python scripts/recalc.py output.xlsx
   </div>
 
   <div class="alert alert-danger">
-    <div class="alert-title">鉄則 7 — フォントは既存セルからcopy()する</div>
-    openpyxlで <code>Font()</code> を新規作成すると、フォント名（Arial→Cambria）、色コード（<code>0EA600</code>→<code>22C55E</code>）、サイズ等が既存と不一致になる。<strong>必ず同行の直前Q列から <code>copy(ref.font)</code></strong> で引き継ぐ。色を変える場合も、ベースはcopy()で作ってからcolorだけ変更する。
+    <div class="alert-title">鉄則 7 — ファイル出力時のデプロイリマインド（必須）</div>
+    <p>Cが <code>.xlsx</code> / <code>.html</code> / <code>.md</code> / <code>.csv</code> を出力したら、<strong>毎回必ず</strong>以下を表示する。省略禁止。</p>
+    <pre style="margin-top:8px"><code>All files ready. Please:
+1. Download: [具体的ファイル名をすべて列挙]
+2. Run deploy.bat
+3. Upload to Claude Project: [プロジェクトにアップすべきファイル名]</code></pre>
+    <p style="margin-top:8px">ファイル名は毎回具体的に書く。「すべてのファイル」のような曖昧な表現は禁止。</p>
   </div>
 
   <div class="alert alert-danger">
-    <div class="alert-title">鉄則 8 — FY列は12pt太字、Q列は11pt</div>
-    FY年間列（Col 40, 45, 49等）のデータ行はすべて <strong>Arial 12pt bold</strong>。Q四半期列は <strong>Arial 11pt</strong>（太字なし）。この規則は全銘柄共通。Date/10Y行はFYでも11pt（Stock priceは12pt bold）。
+    <div class="alert-title">鉄則 8 — セッション終了時の残タスク確認（必須）</div>
+    <p>作業区切り・セッション終了時に、以下を必ず表示する：</p>
+    <p style="margin-top:8px">
+      <strong>① 残タスク一覧</strong>：黄色セル、未処理銘柄、保留事項など<br>
+      <strong>② 次回アクション</strong>：次に何をトリガーに何が動くか<br>
+      <strong>③ 次回決算スケジュール</strong>：直近の決算発表日と銘柄
+    </p>
+    <p style="margin-top:8px;color:var(--text-dim)">スレッドが変わると記憶が途切れる。残タスクを明示しておけば、次スレッドの冒頭で引継ぎドキュメントと照合できる。</p>
   </div>
 
   <div class="alert alert-warning">
-    <div class="alert-title">鉄則 9 — number_format は直前Q列からコピー</div>
-    特にGross Margin行は <code>#,##0.00</code> であるべきところが <code>0.0%</code> になっていることが多い。<strong>値入力の前に</strong>同行の直前Q列からフォーマットをコピーする。
-  </div>
-
-  <div class="alert alert-warning">
-    <div class="alert-title">鉄則 10 — 黄色セルは値と連動して管理する</div>
-    値を入力したセル → 黄色<strong>解除</strong>。値が未定のセル → 黄色<strong>維持</strong>。入力済みなのに黄色が残る、未入力なのに黄色が消える、はどちらもNG。
-  </div>
-
-  <div class="alert alert-danger">
-    <div class="alert-title">鉄則 11 — Beat/Miss の緑色コードは銘柄ごとに異なる</div>
-    緑色の RGB は全銘柄共通ではない（例：CRWD=<code>0EA600</code>、OKTA=<code>00B050</code>）。色コードを固定値で書くと既存セルと不一致になる。<strong>必ず同銘柄の既存Beat/Missセルの色をcopy()する。</strong>
-  </div>
-
-  <div class="alert alert-warning">
-    <div class="alert-title">鉄則 12 — Diluted SharesはIR記載値を使う</div>
-    GAAP Net Income ÷ GAAP Diluted EPS で逆算すると、端数処理や転換社債の影響で正確な値にならない。Press Releaseの「Weighted-average shares used to compute net income per share, diluted」をそのまま使用する。
+    <div class="alert-title">鉄則 9 — スレッド移行提案</div>
+    <p>会話が長くなりコンテキストが埋まってきたら、Cから<strong>積極的に「次のスレッドに移った方がいい」と提案</strong>する。その際、鉄則8の残タスク確認を先に実施してからスレッド移行を促す。</p>
   </div>
 </section>
 
@@ -927,507 +949,9 @@ python scripts/recalc.py output.xlsx
   </div>
 </section>
 
-<!-- ═══ 14. 実運用で判明した注意事項 ═══ -->
-<section id="lessons">
-  <h2><span class="num">14</span>実運用で判明した注意事項</h2>
-  <p>Actual更新の実運用を通じて判明した注意事項を銘柄別に蓄積する。</p>
-
-  <h3>14-A. NCLH — Q4 2025（初回テスト 2026-03-03）</h3>
-
-  <h4>1. Gross Marginの計算方法</h4>
-  <div class="card">
-    <p>NCLHの場合、Gross Margin = Total Revenue − Total Cruise Operating Expense で算出。企業によって「Gross Profit」としてIRに明示されるケースと、自分で引き算が必要なケースがある。クルーズ業界のようにGross Profitが直接開示されない場合は、Income Statementから計算する。</p>
-    <p style="margin-top:8px">例：Q4 2025 → $2,244.4M − $1,323.5M = <strong>$920.9M</strong></p>
-  </div>
-
-  <h4>2. Op Cashflow の四半期逆算</h4>
-  <div class="card">
-    <p>NCLHのOp Cashflow は、Q3まで累計ベースで「通年 − 前Qまでの累計」の数式が入っている。Q4入力時も同じパターンで FY − Q1 − Q2 − Q3 の数式を入力する。</p>
-    <pre><code># Q4 Op Cashflow の数式例
-=2089.746-AO4029-AP4029-AQ4029</code></pre>
-  </div>
-
-  <h4>3. セル書式のトラップ（%表示問題）</h4>
-  <div class="card">
-    <p>Gross Margin セル（Q4・FY列）の <code>number_format</code> が <code>0.0%</code> になっており、920.881 が「92088.1%」と表示された。原因はシート上で該当列のフォーマットが%に設定されていたこと。</p>
-    <p style="margin-top:8px"><strong>対処</strong>：同行の過去Q列の書式（<code>#,##0.00</code>）をコピーして修正。</p>
-    <pre><code># 修正コード
-ref_fmt = ws.cell(row=4023, column=43).number_format  # Q3の書式を参照
-ws.cell(row=4023, column=44).number_format = ref_fmt   # Q4に適用
-ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre>
-  </div>
-
-  <h4>4. Beat/Miss の色分けルール確定</h4>
-  <div class="card">
-    <p><strong>フォントの文字色</strong>で表現する。塗りつぶし（cell fill）は不明セルの黄色マーキング専用。</p>
-    <p style="margin-top:8px">Actual（Earnings / Revenue）とガイダンスの両方に適用。詳細は<a href="#guidance">§07</a>参照。</p>
-  </div>
-
-  <h4>5. Diluted Shares: GAAP vs Adjusted の使い分け</h4>
-  <div class="card">
-    <p>NCLHでは GAAP basis と Adjusted basis で Diluted Shares が異なる（転換社債の希薄化処理の差異）。Non-GAAP Net Income → EPS の逆算には <strong>Adjusted basis</strong> の値を使用する。</p>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th></th><th>GAAP basis</th><th>Adjusted basis</th><th>差異原因</th></tr></thead>
-        <tbody>
-          <tr><td>Q4 2025</td><td>459.5M</td><td>465.9M</td><td>転換社債のif-converted法適用差</td></tr>
-          <tr><td>FY 2025</td><td>477.7M</td><td>495.4M</td><td>同上（通年では差が拡大）</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p style="margin-top:8px;color:var(--text-dim)">※ 他社でも同様の差異があり得るため、IR資料の Non-GAAP reconciliation テーブルを必ず確認すること。</p>
-  </div>
-
-  <h3>14-B. CRWD — Q4 FY2026（2回目 2026-03-04）</h3>
-
-  <h4>1. Actual行FY列の既存値はガイダンスの可能性がある</h4>
-  <div class="card">
-    <p>CRWD の Row 368（EPS）Col 45（FY列）に <code>=(3.7+3.72)/2</code> という数式が入っていた。これはガイダンスレンジ $3.70–$3.72 の中央値で、§07のルールどおり事前に入力されたもの。</p>
-    <p style="margin-top:8px"><strong>教訓</strong>：Actual行に既存値がある場合、それが「仮計算」なのか「ガイダンス中央値」なのかを確認してから上書きする。元の意味を誤認しない。</p>
-  </div>
-
-  <h4>2. SaaS企業のEBITDAカラム問題</h4>
-  <div class="card">
-    <p>CRWDのようなSaaS企業はEBITDAを開示しないケースが多い。Highlights DB（CSV）の <code>ebitda_actual_M</code> にはNon-GAAP Operating Incomeを代用した。</p>
-    <p style="margin-top:8px;color:var(--text-dim)">xlsxには専用のEBITDA行がないため影響なしだが、CSVでの扱いを統一しておく必要あり。</p>
-  </div>
-
-  <h4>3. Gross Margin %書式トラップ（NCLH同様）</h4>
-  <div class="card">
-    <p>CRWDでも Row 372（Gross Margin）の Col 44–45 が <code>0.0%</code> フォーマット。NCLHでの教訓を適用し、入力時に同行の過去Q列の書式をコピーして修正。</p>
-    <div class="alert alert-info" style="margin-top:12px">
-      <div class="alert-title">共通パターンとして確立</div>
-      Actual入力時は必ず「同行の直前Q列の <code>number_format</code> を参照し、新列にコピーしてから値を入力する」をデフォルト手順とする。
-    </div>
-  </div>
-
-  <h4>4. FY Diluted Shares: GAAP損失期の注意</h4>
-  <div class="card">
-    <p>CRWDのFY2026はGAAP純損失（-$162.5M）のため、GAAP Diluted Shares = Basic Shares（250.576M）。一方、Q4単独はGAAP黒字のためDiluted（258.133M）が使われる。</p>
-    <p style="margin-top:8px"><strong>ルール</strong>：Diluted Shares行にはGAAP基準の値を入力する。Non-GAAP EPSはIR開示値をそのまま使用し、逆算は行わない（CRWDの場合、Non-GAAP diluted shares = 258.133M Q4 / 256.476M FYと別の値が存在する）。</p>
-  </div>
-
-  <h4>5. Non-GAAP税率変更の記録</h4>
-  <div class="card">
-    <p>CRWDはFY2026 Q2からNon-GAAP税率を22.5% → 21.0%に変更（One Big Beautiful Bill Act）。前年比較やEPS推移を見る際に税率変更の影響を考慮する必要がある。</p>
-    <p style="margin-top:8px;color:var(--text-dim)">このような会計方針変更はHighlights DB（Markdown §6）に記録する。</p>
-  </div>
-
-  <h4>6. フォント不一致トラップ（Cambria / 色コード / サイズ）</h4>
-  <div class="card">
-    <p>初回入力時、openpyxlの <code>Font(name='Cambria', color='22C55E')</code> で書いたため、既存セルの <code>Arial / 0EA600</code> と不一致になった。さらにFY列を11ptで作成したが、正しくは12pt太字だった。</p>
-    <div class="alert alert-danger" style="margin-top:12px">
-      <div class="alert-title">原因と対策</div>
-      <p><strong>原因</strong>：Font()を新規作成すると、openpyxlのデフォルト値（Cambria等）が混入する。<br>
-      <strong>対策</strong>：<code>copy(ws.cell(row, col_prev).font)</code> で直前Q列のフォントを丸ごとコピーしてからcolorやboldだけ変更する。<strong>→ 鉄則 7・8 として確立</strong></p>
-    </div>
-  </div>
-
-  <h4>7. 黄色セル管理の誤り</h4>
-  <div class="card">
-    <p>次Q（1Q FY27）のEstimate日付セル（Row 366 C8）の黄色を値が空のまま解除してしまった。</p>
-    <p style="margin-top:8px"><strong>ルール</strong>：黄色 = 「値が未定」のマーク。値を入力したら解除、値がないなら維持。<strong>→ 鉄則 10 として確立</strong></p>
-  </div>
-
-  <h4>8. メタデータ行（Date / 10Y / Stock price）の入力漏れ</h4>
-  <div class="card">
-    <p>Actual入力時にブロック下部の Date（Row 388）、U.S. 10Y（Row 389）、Stock price（Row 390）の入力が漏れていた。これらのセルには以前の数式（<code>=AQ388</code> 等、Q3参照）が入っており、実値に書き換える必要がある。</p>
-    <p style="margin-top:8px"><strong>対策</strong>：Actual更新の Step 10 として明記。<strong>→ §06チェックリスト Phase 4 に組み込み済み</strong></p>
-  </div>
-
-  <h4>9. ガイダンス色判定 — 完全一致は「黒」</h4>
-  <div class="card">
-    <p>FY27 EPSガイダンス中央値 $4.84 がコンセンサス $4.84 と完全一致。このケースは緑でも赤でもなく<strong>黒（色なし）</strong>。</p>
-    <p style="margin-top:8px"><strong>→ §07 に3パターン（緑・黒・赤）として明記済み</strong></p>
-  </div>
-
-  <h3>14-C. OKTA — Q4 FY2026（3回目 2026-03-05）</h3>
-
-  <h4>1. IRサイト403ブロック → スクショで解決</h4>
-  <div class="card">
-    <p>investor.okta.com は403エラー、BusinessWireはrobots.txtでブロック。web_search のスニペットからP&amp;L要約（EPS, Revenue, NI, CF）は取得できるが、以下は取得不可：</p>
-    <p style="margin-top:8px">① <strong>Balance Sheet</strong>（Total Equity）<br>② <strong>Non-GAAP reconciliation</strong>（Non-GAAP Gross Profit）<br>③ <strong>Diluted Shares</strong>（正確な加重平均株式数）</p>
-    <div class="alert alert-info" style="margin-top:12px">
-      <div class="alert-title">対策 — Press Releaseスクショ共有</div>
-      <p>まっちさんにIRサイトのPress Releaseページのスクショ共有を依頼する。必要なテーブル3つ：</p>
-      <p style="margin-top:4px"><strong>① Condensed Statements of Operations</strong>（Revenue → Gross Profit → Net Income → Diluted Shares）<br>
-      <strong>② Condensed Balance Sheets</strong>（Total Stockholders' Equity）<br>
-      <strong>③ Non-GAAP Reconciliation</strong>（Non-GAAP Gross Profit / Margin）</p>
-      <p style="margin-top:8px;color:var(--text-dim)">→ §15-D トリガー早見表に「スクショ共有」を追加済み</p>
-    </div>
-  </div>
-
-  <h4>2. Beat/Miss緑色コードが銘柄ごとに異なる</h4>
-  <div class="card">
-    <p>CRWDでは <code>FF0EA600</code> を使用したが、OKTAの既存Beatセルは <code>FF00B050</code> だった。初回入力時にCRWDの緑を使ってしまい不一致が発生。</p>
-    <div class="table-wrap" style="margin-top:12px">
-      <table>
-        <thead><tr><th>銘柄</th><th>Beat 緑</th><th>Miss 赤</th></tr></thead>
-        <tbody>
-          <tr><td>NCLH</td><td><code>00A600</code></td><td><code>FF0000</code></td></tr>
-          <tr><td>CRWD</td><td><code>0EA600</code></td><td><code>FF0000</code></td></tr>
-          <tr><td>OKTA</td><td><code>00B050</code></td><td><code>FF0000</code></td></tr>
-          <tr><td>AVGO</td><td><code>0EA600</code></td><td><code>FF0000</code></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p style="margin-top:8px"><strong>→ 鉄則 11 として確立。色コードを固定値で書かず、必ず同銘柄の既存セルからcopy()する。</strong></p>
-  </div>
-
-  <h4>3. Diluted Sharesは逆算ではなくIR記載値を使う</h4>
-  <div class="card">
-    <p>初回入力時に GAAP NI $63M ÷ Diluted EPS $0.35 = 180M と逆算したが、IR記載の正確な値は 180,450（千株）= 180.450M。端数が異なる。</p>
-    <p style="margin-top:8px"><strong>→ 鉄則 12 として確立。Press Releaseの「Weighted-average shares used to compute net income per share, diluted」をそのまま使用する。</strong></p>
-  </div>
-
-  <h4>4. OKTAはGAAP / Non-GAAP両方のGross Marginが存在する</h4>
-  <div class="card">
-    <p>OKTAのActual行にはGross Margin（Row 1226, GAAP）とGross Margin Non-GAAP（Row 1228）の2行がある。GAAP GPはP&amp;L、Non-GAAP GPはreconciliation tableからそれぞれ取得が必要。</p>
-    <p style="margin-top:8px;color:var(--text-dim)">Q4: GAAP $593M / Non-GAAP $624M（差額はSBC $19M + 償却 $12M）<br>
-    FY: GAAP $2,258M / Non-GAAP $2,385M</p>
-  </div>
-
-  <h4>5. OKTAのNon-GAAP税率変更（FY2027から21%）</h4>
-  <div class="card">
-    <p>FY2027ガイダンスでNon-GAAP tax rate が 26% → 21% に変更（One Big Beautiful Bill Act）。CRWDと同じ法改正による変更。前年EPS比較時に税率差を考慮する必要がある。</p>
-  </div>
-
-  <h3>14-D. AVGO — Q1 FY2026（4回目 2026-03-05）</h3>
-
-  <h4>1. AVGOの決算期ずれ（11月–10月FY）</h4>
-  <div class="card">
-    <p>AVGOのFiscal Yearは11月〜10月。Q1 FY2026 = Nov 2025–Feb 2026。xlsx上のカレンダーQ（2025Q4）とFY Qが一致しない。</p>
-    <div class="table-wrap" style="margin-top:12px">
-      <table>
-        <thead><tr><th>銘柄</th><th>FY期間</th><th>xlsx上の2025Q4にあたるFY Q</th></tr></thead>
-        <tbody>
-          <tr><td>OKTA</td><td>Feb–Jan</td><td>Q4 FY2026</td></tr>
-          <tr><td>CRWD</td><td>Feb–Jan</td><td>Q4 FY2026</td></tr>
-          <tr><td>AVGO</td><td>Nov–Oct</td><td>Q1 FY2026</td></tr>
-          <tr><td>NCLH</td><td>Jan–Dec</td><td>Q4 2025（暦年一致）</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p style="margin-top:8px;color:var(--text-dim)">Highlights MD のファイル名は <code>2025-Q4-AVGO.md</code>（カレンダーQ基準）とし、中身に「Q1 FY2026」と明記する。</p>
-  </div>
-
-  <h4>2. AVGOの数値単位（百万ドル、ただしSharesは百万株）</h4>
-  <div class="card">
-    <p>AVGOのPress Releaseは全て百万ドル表記。Sharesも百万株（例：4,888M shares = 4,888）。xlsxのSharesセルもそのまま 4888 と入力。</p>
-    <p style="margin-top:8px;color:var(--text-dim)">他社（OKTA等）は千株表記（180,450 thousands = 180.450M → xlsxには180.450と入力）のケースもあるため、企業ごとにIRの表記単位を確認する。</p>
-  </div>
-
-  <h4>3. AVGOはEPSガイダンスなし（EBITDA marginのみ）</h4>
-  <div class="card">
-    <p>AVGOのQ2ガイダンスは Revenue ~$22B と Adjusted EBITDA margin ~68% のみ。EPSガイダンスを出さないため、EPS行のガイダンス列は空欄のまま。Revenue行のみ入力する。</p>
-  </div>
-
-  <h4>4. AVGOのGross Margin行はGAAP（Total cost of revenueベース）</h4>
-  <div class="card">
-    <p>AVGOのP&amp;LにはGross marginが明記されている（$13,157M）。ただしcost of revenueに「Amortization of acquisition-related intangible assets」$1,462M と「Restructuring charges」$13M が含まれており、Non-GAAPでは調整が必要。AVGOのxlsxにはGAAP行のみあるため、GAAP値をそのまま入力。</p>
-  </div>
-
-  <h3>14-E. COST — Q2 FY2026（5回目 2026-03-06）</h3>
-
-  <h4>1. COSTのPress Releaseには詳細P&L・BS・CFが含まれない</h4>
-  <div class="card">
-    <p>COSTの決算発表資料（Earnings Supplement PDF）にはサマリー情報のみ記載される：Gross Margin %、NI、EPS、Comp Sales等。以下は含まれない：</p>
-    <p style="margin-top:8px">① Gross Profit（実額）<br>② Operating Cash Flow<br>③ Balance Sheet（Total Equity）<br>④ Diluted Weighted-Average Shares（正確値）</p>
-    <div class="alert alert-info" style="margin-top:12px">
-      <div class="alert-title">COST専用フロー — 2段階入力</div>
-      <p><strong>Step 1（決算当日）</strong>：EPS、Total Revenue、Net Income を入力。他は黄色で保留。<br>
-      <strong>Step 2（Yahoo Finance更新後）</strong>：Yahoo Finance Financials のスクショ共有で Gross Profit、Op CF、Total Equity、Diluted Shares を入力。黄色解除。</p>
-      <p style="margin-top:8px;color:var(--text-dim)">Yahoo Finance Financials は通常、決算発表の1–3営業日後に更新される。</p>
-    </div>
-  </div>
-
-  <h4>2. COSTのRevenue行 = Total Revenue（Net Sales + Membership Fees）</h4>
-  <div class="card">
-    <p>COSTのP&LはNet Sales（商品売上）とMembership Fees（会費収入）を分けて開示する。xlsxのRevenue行には<strong>Total Revenue</strong>（= Net Sales + Membership Fees）を入力する。</p>
-    <div class="table-wrap" style="margin-top:12px">
-      <table>
-        <thead><tr><th>項目</th><th>Q2 FY2026</th><th>備考</th></tr></thead>
-        <tbody>
-          <tr><td>Net Sales</td><td>$68,240M</td><td>商品売上のみ</td></tr>
-          <tr><td>Membership Fees</td><td>$1,360M</td><td>会費収入</td></tr>
-          <tr><td><strong>Total Revenue</strong></td><td><strong>$69,600M</strong></td><td>xlsxに入力する値</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p style="margin-top:8px;color:var(--text-dim)">コンセンサスもTotal Revenueベースで比較する。</p>
-  </div>
-
-  <h4>3. COSTの決算期（Sep–Aug）とガイダンス非提供</h4>
-  <div class="card">
-    <p>COSTのFiscal Yearは9月〜8月。Q2 FY2026 = Dec 2025–Feb 2026。<br>
-    COSTは四半期ガイダンスを一切提供しない。したがってガイダンス行は常に空欄。</p>
-  </div>
-
-  <h4>4. COSTのEPSはGAAP（Non-GAAPなし）</h4>
-  <div class="card">
-    <p>COSTはNon-GAAP指標を使用しない。Earnings行に入力するのはGAAP Diluted EPS（$4.58）。Non-GAAP NI行はxlsx上では数式（= EPS × Shares）で計算される。</p>
-  </div>
-
-  <h3>14-F. IOT — Q4 FY2026（6回目 2026-03-06）</h3>
-
-  <h4>1. IOTのPress Release PDF が最も網羅的</h4>
-  <div class="card">
-    <p>SamsaraのPress Release（SEC Filing Exhibit 99.1）はPDF形式で、Q単独＋FY通年の両方の以下テーブルを含む：</p>
-    <p style="margin-top:8px">① Financial Highlights（GAAP/Non-GAAP両方のGP、NI、EPS、CF）<br>② Condensed Balance Sheets<br>③ Condensed Statements of Operations<br>④ Condensed Statements of Cash Flows<br>⑤ Non-GAAP Reconciliation</p>
-    <p style="margin-top:8px">まっちさんからPDFを共有してもらえれば全データが一度に取得可能。</p>
-  </div>
-
-  <h4>2. IOTのShares単位は千株</h4>
-  <div class="card">
-    <p>IOTのPress Releaseは "In thousands, except share and per share data" 表記。Diluted Shares = 587,619,051 shares = <strong>587.619M</strong>（xlsxには587.619と入力）。</p>
-    <p style="margin-top:8px;color:var(--text-dim)">ただしFinancial Highlightsテーブルの丸め値（587.6）ではなく、Statements of Operationsの正確値を使用する。</p>
-  </div>
-
-  <h4>3. IOTのNon-GAAP NI は Reconciliation テーブルから取得</h4>
-  <div class="card">
-    <p>Financial HighlightsにはNon-GAAP EPS（$0.18）しか記載されない。Non-GAAP Net Income（$104.857M）はReconciliation テーブルの「Non-GAAP net income」行から取得する。</p>
-    <p style="margin-top:8px">EPS × Sharesで逆算すると $0.18 × 587.619 = $105.8M となり、若干の差異が出る（丸めの影響）。IR記載値を優先する。</p>
-  </div>
-
-  <h4>4. IOTの決算期（Feb–Jan）とFY通期の注意</h4>
-  <div class="card">
-    <p>IOTのFiscal YearはFeb–Jan（OKTAと同じ）。FY通期はGAAP純損失（-$9.1M）のためGAAP Diluted Shares = Basic Shares（573.483M）。一方、Non-GAAP Diluted Shares は 585.364M。xlsxのDiluted Shares行にはNon-GAAP基準の値を入力（EPS逆算の整合性のため）。</p>
-  </div>
-</section>
-
-<!-- ═══ 15. 決算更新ワークフロー ═══ -->
-<section id="workflow-trigger">
-  <h2><span class="num">15</span>決算更新ワークフロー — トリガーとチェックリスト</h2>
-
-  <h3>全体フロー</h3>
-  <div class="flow">
-    <div class="flow-step"><span class="step-num">毎週末</span>Estimate収集<br>（まっち → C）</div>
-    <span class="flow-arrow">&rarr;</span>
-    <div class="flow-step"><span class="step-num">決算発表後</span>Actual更新<br>（まっち → C）</div>
-    <span class="flow-arrow">&rarr;</span>
-    <div class="flow-step"><span class="step-num">C作業後</span>ファイル保存<br>（まっち）</div>
-  </div>
-
-  <h3>A. Estimate更新（毎週末・決算週の前）</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th style="width:50px">Step</th><th style="width:80px">担当</th><th>操作</th><th>備考</th></tr></thead>
-      <tbody>
-        <tr><td>1</td><td>まっち</td><td>Yahoo Finance Analysis のスクショを撮って共有</td><td><strong>スクショ必須</strong>。CはYahoo Financeに直接アクセスできない</td></tr>
-        <tr><td>2</td><td>C</td><td>Estimate行（Earnings Avg. / Revenue Avg.）に転記</td><td>xlsx更新 → ファイル出力</td></tr>
-        <tr><td>3</td><td>まっち</td><td>出力xlsxをダウンロードして確認</td><td></td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h3>B. Actual更新（決算発表後）</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th style="width:50px">Step</th><th style="width:80px">担当</th><th>操作</th><th>備考</th></tr></thead>
-      <tbody>
-        <tr><td>1</td><td>まっち</td><td>Cに「○○の決算出た、更新して」と伝える</td><td><strong>スクショ不要</strong>。CがIRプレスリリースを取得する。Yahoo速報値のスクショは二重チェック用で有効だが必須ではない</td></tr>
-        <tr><td>2</td><td>C</td><td>IRからActual数値を取得 → xlsx Actual行に入力</td><td>§06の14ステップを全実行。<strong>書式・フォント・黄色管理含む</strong></td></tr>
-        <tr><td>3</td><td>C</td><td>メタデータ入力：日付・ガイダンス・10Y・株価</td><td>§06 Phase 4 の全項目</td></tr>
-        <tr><td>4</td><td>C</td><td>Highlights Markdown作成</td><td><code>YYYY-QN-TICKER.md</code></td></tr>
-        <tr><td>5</td><td>C</td><td>Summary CSV追記</td><td><code>summary-YYYYQN.csv</code></td></tr>
-        <tr><td>6</td><td>まっち</td><td>出力ファイルをダウンロード → 下記チェックリスト実行</td><td></td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h3>C. まっちさんの作業チェックリスト（毎回）</h3>
-  <div class="alert alert-info">
-    <div class="alert-title">Cの作業完了後、まっちさんが行うこと</div>
-  </div>
-  <div class="card">
-    <h4>方法1：deploy.bat を使う場合（推奨）</h4>
-    <p>
-      ☐ Claudeの出力からすべてのファイルをダウンロード（ダウンロードフォルダに保存）<br>
-      ☐ <code>deploy.bat</code> をダブルクリック → 自動で振り分け＋commit＋push<br>
-      ☐ 最終レポートで ✅ を確認<br>
-      ☐ <code>決算チェック_YYYYMMDD.xlsx</code> → Claudeプロジェクトにアップロード<br>
-      ☐ <code>earnings-check-manual.html</code>（更新時のみ）→ Claudeプロジェクトにアップロード
-    </p>
-    <h4 style="margin-top:16px">方法2：手動の場合</h4>
-    <p>
-      ☐ 各ファイルをダウンロード → 正しいリポフォルダにコピー<br>
-      ☐ GitHub Desktop で earnings-insight を commit + push<br>
-      ☐ GitHub Desktop で github-pages-guide を commit + push<br>
-      ☐ xlsx + manual → Claudeプロジェクトにアップロード
-    </p>
-    <p style="margin-top:12px;color:var(--text-dim)">詳細は <a href="#deploy-bat">§15-E. deploy.bat 使い方</a> を参照。</p>
-  </div>
-
-  <h3>D. トリガー早見表 — 何を言えばCが動くか</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th style="width:260px">まっちさんの発言</th><th>Cのアクション</th><th>必要な添付</th></tr></thead>
-      <tbody>
-        <tr><td>「○○の決算出た、更新して」</td><td>IR取得 → xlsx Actual入力 → MD → CSV</td><td>なし（スクショ任意）</td></tr>
-        <tr><td>Yahoo Financeスクショ共有</td><td>xlsx Estimate行に転記</td><td>スクショ必須</td></tr>
-        <tr><td>「マニュアル更新して」</td><td>earnings-check-manual.html 更新</td><td>なし</td></tr>
-        <tr><td>「○○のガイダンス入れて」</td><td>Actual行の未来Q列にガイダンス値を入力</td><td>なし（Cが検索）</td></tr>
-        <tr><td style="background:#fff3cd">CからPress Releaseスクショ依頼が来た</td><td>—（Cが入力再開）</td><td><strong>IRサイトのスクショ共有</strong>（P&amp;L、BS、Non-GAAP reconciliation）</td></tr>
-        <tr><td style="background:#d4edda">Cから「deploy.bat を実行してください」と表示された</td><td>—（Cの作業は完了済み）</td><td>なし — ファイルをダウンロードして <code>deploy.bat</code> を実行</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="alert alert-info" style="margin-top:12px">
-    <div class="alert-title">IRアクセスブロック時のフロー</div>
-    <p>多くのIRサイト（investor.okta.com、businesswire.com等）は403/robotsでCからのアクセスをブロックする。web_searchのスニペットからP&amp;L要約は取れるが、Balance Sheet・Non-GAAP reconciliation・Diluted Shares等の詳細テーブルは取得できない。</p>
-    <p style="margin-top:8px"><strong>Cが「Press Releaseのスクショを共有してください」と依頼したら</strong>、IRサイトの決算プレスリリースから以下3テーブルのスクショを共有する：</p>
-    <p style="margin-top:4px">① Condensed Statements of Operations（P&amp;L）<br>② Condensed Balance Sheets<br>③ Non-GAAP Reconciliation（Gross Profit / Net Income）</p>
-  </div>
-
-  <div class="alert alert-danger" style="margin-top:24px">
-    <div class="alert-title">重要：Cの出力はすべてダウンロードが必要</div>
-    Claudeが出力したファイル（xlsx、md、csv、html）は自動では保存されない。<strong>毎回必ずダウンロードし、GitHubまたはプロジェクトにアップロード</strong>すること。これを忘れると、次回の会話でCは古いファイルを参照してしまう。
-  </div>
-
-  <h3 id="deploy-bat">E. deploy.bat — 自動デプロイスクリプト</h3>
-
-  <div class="card">
-    <h4>概要</h4>
-    <p>ダウンロードフォルダに保存されたファイルを、ファイル名で自動判定してGitHubリポに振り分け → commit → push する Windows バッチスクリプト。</p>
-  </div>
-
-  <h4>セットアップ（初回のみ）</h4>
-  <div class="card">
-    <p><strong>Step 1</strong>：<code>deploy.bat</code> をデスクトップに保存する</p>
-    <p><strong>Step 2</strong>：メモ帳で開いて、以下3行がまっちさんのPC環境と一致しているか確認する</p>
-    <pre><code>set "DOWNLOAD_DIR=%USERPROFILE%\Downloads"
-set "REPO_INSIGHT=C:\GitHub\earnings-insight"
-set "REPO_PAGES=C:\GitHub\github-pages-guide"</code></pre>
-    <p style="margin-top:8px;color:var(--text-dim)">パスが違う場合はここを修正する。</p>
-    <p style="margin-top:12px"><strong>Step 3</strong>：GitHub Desktop で両リポが clone 済みであることを確認する（<code>C:\GitHub\</code> 配下に存在すること）。</p>
-  </div>
-
-  <h4>使い方（毎回）</h4>
-  <div class="card">
-    <p><strong>Step 1</strong>：Claudeの出力から<strong>すべてのファイル</strong>をダウンロード（ダウンロードフォルダに自動保存される）</p>
-    <p><strong>Step 2</strong>：デスクトップの <code>deploy.bat</code> を<strong>ダブルクリック</strong></p>
-    <p><strong>Step 3</strong>：黒い画面（コマンドプロンプト）が開き、処理が流れる</p>
-    <p><strong>Step 4</strong>：最終レポートを確認</p>
-    <pre><code>══════════════════════════════════════════════════
-  📋 デプロイ完了レポート
-══════════════════════════════════════════════════
-
-  ✅ 全ステップ正常完了
-
-  ⚡ 残り手動タスク:
-    ☐ 決算チェック_YYYYMMDD.xlsx → Claudeプロジェクトにアップロード
-    ☐ earnings-check-manual.html → Claudeプロジェクトにアップロード</code></pre>
-    <p style="margin-top:8px"><strong>Step 5</strong>：残り手動タスク（xlsx + manual のClaude プロジェクトアップロード）を実行</p>
-  </div>
-
-  <h4>自動振り分けルール</h4>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>ファイル名パターン</th><th>振り分け先</th></tr></thead>
-      <tbody>
-        <tr><td><code>2025-Q4-*.md</code></td><td><code>earnings-insight/highlights/</code></td></tr>
-        <tr><td><code>summary-*.csv</code></td><td><code>earnings-insight/highlights/</code></td></tr>
-        <tr><td><code>earnings-check-manual.html</code></td><td><code>github-pages-guide/</code></td></tr>
-        <tr><td><code>eh-manual.html</code></td><td><code>github-pages-guide/</code></td></tr>
-        <tr><td><code>launcher.html</code></td><td><code>github-pages-guide/</code></td></tr>
-        <tr><td><code>決算チェック_*.xlsx</code></td><td>（対象外）手動でプロジェクトにアップ</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h4>レポートの読み方</h4>
-  <div class="card">
-    <p>
-      <strong>✅</strong> = 成功（コピー、commit、push すべて正常）<br>
-      <strong>❌</strong> = 失敗（パス間違い、ネットワークエラー等）→ 手動で対応<br>
-      <strong>ℹ️</strong> = 変更なし（該当リポに新しいファイルがなかった場合はスキップ）
-    </p>
-    <p style="margin-top:8px">Phase 5 で各リポの最新commit hash と時刻が表示される。GitHubのWebで同じhashが見えれば push 完了の証拠。</p>
-  </div>
-
-  <div class="alert alert-warning">
-    <div class="alert-title">注意：deploy.bat で処理されないファイル</div>
-    <p><code>決算チェック_YYYYMMDD.xlsx</code> と <code>earnings-check-manual.html</code>（プロジェクト用）は<strong>手動でClaudeプロジェクトにアップロード</strong>が必要。これはClaude UIの制約のため自動化できない。</p>
-  </div>
-
-  <div class="alert alert-info" style="margin-top:16px">
-    <div class="alert-title">Cのルール：deploy.bat リマインド</div>
-    <p>Cは <code>.html</code> / <code>.md</code> / <code>.csv</code> ファイルを出力するたびに、以下のリマインドメッセージを表示する：</p>
-    <pre style="margin-top:8px;background:#0d1117;color:#3fb950;padding:12px;border-radius:6px;font-size:13px"><code>All files ready. Please:
-1. Download all files
-2. Run deploy.bat
-3. Upload xlsx + manual to Claude Project</code></pre>
-    <p style="margin-top:8px;color:var(--text-dim)">これにより、まっちさんがGitHubへのpushを忘れることを防ぐ。</p>
-  </div>
-</section>
-
-<!-- ═══ 16. 自動化ロードマップ ═══ -->
-<section id="automation-roadmap">
-  <h2><span class="num">16</span>自動化ロードマップ</h2>
-  <p>現在のワークフローの自動化状況と、将来的な改善計画。</p>
-
-  <h3>現状（v1.6 時点）</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>ステップ</th><th>手段</th><th>自動化</th></tr></thead>
-      <tbody>
-        <tr><td>IR取得 → xlsx入力 → MD → CSV</td><td>Claude（このチャット）</td><td style="color:#3fb950">✅ 自動</td></tr>
-        <tr><td>ファイルダウンロード</td><td>ブラウザ手動</td><td style="color:#d29922">🟡 手動（ブラウザ制約）</td></tr>
-        <tr><td>リポへの振り分け + commit + push</td><td><code>deploy.bat</code></td><td style="color:#3fb950">✅ 自動（ダブルクリック）</td></tr>
-        <tr><td>Claudeプロジェクトにアップロード</td><td>手動</td><td style="color:#d29922">🟡 手動（Claude UI制約）</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h3>将来計画：Claude Code / Cowork への移行</h3>
-  <div class="card">
-    <p><strong>Claude Code</strong>（ターミナルベース）または <strong>Cowork</strong>（デスクトップGUI）に移行すると、ローカルファイルシステムへの直接アクセスが可能になり、以下が実現する：</p>
-  </div>
-
-  <div class="table-wrap" style="margin-top:12px">
-    <table>
-      <thead><tr><th>機能</th><th>Claude.ai（現在）</th><th>Claude Code</th><th>Cowork</th></tr></thead>
-      <tbody>
-        <tr><td>ファイル生成</td><td>✅</td><td>✅</td><td>✅</td></tr>
-        <tr><td>ローカルに直接書き込み</td><td>❌</td><td>✅</td><td>✅</td></tr>
-        <tr><td>git commit + push</td><td>❌</td><td>✅（<code>/commit</code>一発）</td><td>✅</td></tr>
-        <tr><td>複数リポ操作</td><td>❌</td><td>✅（worktree対応）</td><td>✅</td></tr>
-        <tr><td>ダウンロード不要</td><td>❌</td><td>✅</td><td>✅</td></tr>
-        <tr><td>非エンジニア向けUI</td><td>✅</td><td>❌（ターミナル）</td><td>✅</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="alert alert-info" style="margin-top:16px">
-    <div class="alert-title">移行の理想形</div>
-    <p>「○○の決算出た、更新して」→ Claude Code/Cowork が IR取得 → xlsx更新 → MD/CSV作成 → 正しいリポに直接保存 → commit → push まで<strong>全自動</strong>。ダウンロードという概念自体がなくなる。</p>
-  </div>
-
-  <h3>移行の前提条件</h3>
-  <div class="card">
-    <p>以下が解決したら移行を検討する：</p>
-    <p style="margin-top:8px">
-      ☐ Windows版 Cowork の<strong>フォルダアクセス制限</strong>が緩和される（現在はユーザーフォルダのみ、<code>C:\GitHub\</code> にアクセス不可の報告あり）<br>
-      ☐ Claude Code のWindows対応が安定する<br>
-      ☐ openpyxl等のPythonライブラリがClaude Code環境で利用可能であることを確認<br>
-      ☐ 現在の決算チェック運用が十分に標準化される（マニュアル§14の企業別癖の蓄積が一定水準に達する）
-    </p>
-  </div>
-
-  <h3>当面の改善案</h3>
-  <div class="card">
-    <p>
-      ☐ <code>deploy.bat</code> の運用テスト → 問題なければ標準フローに昇格<br>
-      ☐ xlsxのClaude プロジェクトへのアップロードは手動のまま（UI制約）<br>
-      ☐ GitHub Actions で push 後にSlack通知等を追加することも可能（将来）
-    </p>
-  </div>
-</section>
-
 <!-- ═══ Footer ═══ -->
 <footer style="margin-top:80px;padding-top:32px;border-top:1px solid var(--border);text-align:center;color:var(--text-dim);font-size:13px;">
-  決算チェック 運用マニュアル v1.7 — 2026-03-07 更新<br>
+  決算チェック 運用マニュアル v1.8 — 2026-03-07 更新<br>
   <span style="font-family:'JetBrains Mono',monospace;font-size:11px;">Maintained by まっち &amp; Claude</span>
 </footer>
 
