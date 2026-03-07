@@ -372,7 +372,7 @@ li {
   <div class="header-label">Operations Manual</div>
   <h1>決算チェック 運用マニュアル</h1>
   <div class="header-meta">
-    決算チェック_20260305.xlsx &mdash; Version <span>1.4</span> &mdash; <span>2026-03-05</span>
+    決算チェック_20260306.xlsx &mdash; Version <span>1.5</span> &mdash; <span>2026-03-07</span>
   </div>
 </header>
 
@@ -1125,6 +1125,73 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
   <div class="card">
     <p>AVGOのP&amp;LにはGross marginが明記されている（$13,157M）。ただしcost of revenueに「Amortization of acquisition-related intangible assets」$1,462M と「Restructuring charges」$13M が含まれており、Non-GAAPでは調整が必要。AVGOのxlsxにはGAAP行のみあるため、GAAP値をそのまま入力。</p>
   </div>
+
+  <h3>14-E. COST — Q2 FY2026（5回目 2026-03-06）</h3>
+
+  <h4>1. COSTのPress Releaseには詳細P&L・BS・CFが含まれない</h4>
+  <div class="card">
+    <p>COSTの決算発表資料（Earnings Supplement PDF）にはサマリー情報のみ記載される：Gross Margin %、NI、EPS、Comp Sales等。以下は含まれない：</p>
+    <p style="margin-top:8px">① Gross Profit（実額）<br>② Operating Cash Flow<br>③ Balance Sheet（Total Equity）<br>④ Diluted Weighted-Average Shares（正確値）</p>
+    <div class="alert alert-info" style="margin-top:12px">
+      <div class="alert-title">COST専用フロー — 2段階入力</div>
+      <p><strong>Step 1（決算当日）</strong>：EPS、Total Revenue、Net Income を入力。他は黄色で保留。<br>
+      <strong>Step 2（Yahoo Finance更新後）</strong>：Yahoo Finance Financials のスクショ共有で Gross Profit、Op CF、Total Equity、Diluted Shares を入力。黄色解除。</p>
+      <p style="margin-top:8px;color:var(--text-dim)">Yahoo Finance Financials は通常、決算発表の1–3営業日後に更新される。</p>
+    </div>
+  </div>
+
+  <h4>2. COSTのRevenue行 = Total Revenue（Net Sales + Membership Fees）</h4>
+  <div class="card">
+    <p>COSTのP&LはNet Sales（商品売上）とMembership Fees（会費収入）を分けて開示する。xlsxのRevenue行には<strong>Total Revenue</strong>（= Net Sales + Membership Fees）を入力する。</p>
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th>項目</th><th>Q2 FY2026</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr><td>Net Sales</td><td>$68,240M</td><td>商品売上のみ</td></tr>
+          <tr><td>Membership Fees</td><td>$1,360M</td><td>会費収入</td></tr>
+          <tr><td><strong>Total Revenue</strong></td><td><strong>$69,600M</strong></td><td>xlsxに入力する値</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:8px;color:var(--text-dim)">コンセンサスもTotal Revenueベースで比較する。</p>
+  </div>
+
+  <h4>3. COSTの決算期（Sep–Aug）とガイダンス非提供</h4>
+  <div class="card">
+    <p>COSTのFiscal Yearは9月〜8月。Q2 FY2026 = Dec 2025–Feb 2026。<br>
+    COSTは四半期ガイダンスを一切提供しない。したがってガイダンス行は常に空欄。</p>
+  </div>
+
+  <h4>4. COSTのEPSはGAAP（Non-GAAPなし）</h4>
+  <div class="card">
+    <p>COSTはNon-GAAP指標を使用しない。Earnings行に入力するのはGAAP Diluted EPS（$4.58）。Non-GAAP NI行はxlsx上では数式（= EPS × Shares）で計算される。</p>
+  </div>
+
+  <h3>14-F. IOT — Q4 FY2026（6回目 2026-03-06）</h3>
+
+  <h4>1. IOTのPress Release PDF が最も網羅的</h4>
+  <div class="card">
+    <p>SamsaraのPress Release（SEC Filing Exhibit 99.1）はPDF形式で、Q単独＋FY通年の両方の以下テーブルを含む：</p>
+    <p style="margin-top:8px">① Financial Highlights（GAAP/Non-GAAP両方のGP、NI、EPS、CF）<br>② Condensed Balance Sheets<br>③ Condensed Statements of Operations<br>④ Condensed Statements of Cash Flows<br>⑤ Non-GAAP Reconciliation</p>
+    <p style="margin-top:8px">まっちさんからPDFを共有してもらえれば全データが一度に取得可能。</p>
+  </div>
+
+  <h4>2. IOTのShares単位は千株</h4>
+  <div class="card">
+    <p>IOTのPress Releaseは "In thousands, except share and per share data" 表記。Diluted Shares = 587,619,051 shares = <strong>587.619M</strong>（xlsxには587.619と入力）。</p>
+    <p style="margin-top:8px;color:var(--text-dim)">ただしFinancial Highlightsテーブルの丸め値（587.6）ではなく、Statements of Operationsの正確値を使用する。</p>
+  </div>
+
+  <h4>3. IOTのNon-GAAP NI は Reconciliation テーブルから取得</h4>
+  <div class="card">
+    <p>Financial HighlightsにはNon-GAAP EPS（$0.18）しか記載されない。Non-GAAP Net Income（$104.857M）はReconciliation テーブルの「Non-GAAP net income」行から取得する。</p>
+    <p style="margin-top:8px">EPS × Sharesで逆算すると $0.18 × 587.619 = $105.8M となり、若干の差異が出る（丸めの影響）。IR記載値を優先する。</p>
+  </div>
+
+  <h4>4. IOTの決算期（Feb–Jan）とFY通期の注意</h4>
+  <div class="card">
+    <p>IOTのFiscal YearはFeb–Jan（OKTAと同じ）。FY通期はGAAP純損失（-$9.1M）のためGAAP Diluted Shares = Basic Shares（573.483M）。一方、Non-GAAP Diluted Shares は 585.364M。xlsxのDiluted Shares行にはNon-GAAP基準の値を入力（EPS逆算の整合性のため）。</p>
+  </div>
 </section>
 
 <!-- ═══ 15. 決算更新ワークフロー ═══ -->
@@ -1222,7 +1289,7 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
 
 <!-- ═══ Footer ═══ -->
 <footer style="margin-top:80px;padding-top:32px;border-top:1px solid var(--border);text-align:center;color:var(--text-dim);font-size:13px;">
-  決算チェック 運用マニュアル v1.4 — 2026-03-05 更新<br>
+  決算チェック 運用マニュアル v1.5 — 2026-03-07 更新<br>
   <span style="font-family:'JetBrains Mono',monospace;font-size:11px;">Maintained by まっち &amp; Claude</span>
 </footer>
 
