@@ -372,7 +372,7 @@ li {
   <div class="header-label">Operations Manual</div>
   <h1>決算チェック 運用マニュアル</h1>
   <div class="header-meta">
-    決算チェック_20260306.xlsx &mdash; Version <span>1.5</span> &mdash; <span>2026-03-07</span>
+    決算チェック_20260306.xlsx &mdash; Version <span>1.6</span> &mdash; <span>2026-03-07</span>
   </div>
 </header>
 
@@ -395,6 +395,7 @@ li {
     <li><a href="#versioning">バージョン管理</a></li>
     <li><a href="#lessons">実運用で判明した注意事項</a></li>
     <li><a href="#workflow-trigger">決算更新ワークフロー — トリガーとチェックリスト</a></li>
+    <li><a href="#automation-roadmap">自動化ロードマップ</a></li>
   </ol>
 </nav>
 
@@ -1239,25 +1240,22 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
     <div class="alert-title">Cの作業完了後、まっちさんが行うこと</div>
   </div>
   <div class="card">
-    <h4>xlsx関連</h4>
+    <h4>方法1：deploy.bat を使う場合（推奨）</h4>
     <p>
-      ☐ 出力 <code>決算チェック_YYYYMMDD.xlsx</code> をダウンロード<br>
-      ☐ Excelで開いて、対象銘柄のActual行をざっと目視確認（数値・色分け・書式）<br>
-      ☐ 問題なければ、このプロジェクトにアップロード（既存ファイルを差し替え）
+      ☐ Claudeの出力からすべてのファイルをダウンロード（ダウンロードフォルダに保存）<br>
+      ☐ <code>deploy.bat</code> をダブルクリック → 自動で振り分け＋commit＋push<br>
+      ☐ 最終レポートで ✅ を確認<br>
+      ☐ <code>決算チェック_YYYYMMDD.xlsx</code> → Claudeプロジェクトにアップロード<br>
+      ☐ <code>earnings-check-manual.html</code>（更新時のみ）→ Claudeプロジェクトにアップロード
     </p>
-    <h4 style="margin-top:16px">Highlights DB関連</h4>
+    <h4 style="margin-top:16px">方法2：手動の場合</h4>
     <p>
-      ☐ 出力 <code>YYYY-QN-TICKER.md</code> をダウンロード<br>
-      ☐ GitHub <code>earnings-insight</code> → <code>highlights/</code> にアップロード<br>
-      ☐ 出力 <code>summary-YYYYQN.csv</code> をダウンロード<br>
-      ☐ GitHub <code>earnings-insight</code> → <code>highlights/</code> の既存CSVを差し替え（Method A: 全置換）
+      ☐ 各ファイルをダウンロード → 正しいリポフォルダにコピー<br>
+      ☐ GitHub Desktop で earnings-insight を commit + push<br>
+      ☐ GitHub Desktop で github-pages-guide を commit + push<br>
+      ☐ xlsx + manual → Claudeプロジェクトにアップロード
     </p>
-    <h4 style="margin-top:16px">マニュアル更新時のみ</h4>
-    <p>
-      ☐ 出力 <code>earnings-check-manual.html</code> をダウンロード<br>
-      ☐ GitHub <code>github-pages-guide</code> リポで既存ファイルを差し替え<br>
-      ☐ GitHub Pages の自動デプロイを確認（通常1–2分）
-    </p>
+    <p style="margin-top:12px;color:var(--text-dim)">詳細は <a href="#deploy-bat">§15-E. deploy.bat 使い方</a> を参照。</p>
   </div>
 
   <h3>D. トリガー早見表 — 何を言えばCが動くか</h3>
@@ -1285,11 +1283,140 @@ ws.cell(row=4023, column=45).number_format = ref_fmt   # FYに適用</code></pre
     <div class="alert-title">重要：Cの出力はすべてダウンロードが必要</div>
     Claudeが出力したファイル（xlsx、md、csv、html）は自動では保存されない。<strong>毎回必ずダウンロードし、GitHubまたはプロジェクトにアップロード</strong>すること。これを忘れると、次回の会話でCは古いファイルを参照してしまう。
   </div>
+
+  <h3 id="deploy-bat">E. deploy.bat — 自動デプロイスクリプト</h3>
+
+  <div class="card">
+    <h4>概要</h4>
+    <p>ダウンロードフォルダに保存されたファイルを、ファイル名で自動判定してGitHubリポに振り分け → commit → push する Windows バッチスクリプト。</p>
+  </div>
+
+  <h4>セットアップ（初回のみ）</h4>
+  <div class="card">
+    <p><strong>Step 1</strong>：<code>deploy.bat</code> をデスクトップに保存する</p>
+    <p><strong>Step 2</strong>：メモ帳で開いて、以下3行がまっちさんのPC環境と一致しているか確認する</p>
+    <pre><code>set "DOWNLOAD_DIR=%USERPROFILE%\Downloads"
+set "REPO_INSIGHT=C:\GitHub\earnings-insight"
+set "REPO_PAGES=C:\GitHub\github-pages-guide"</code></pre>
+    <p style="margin-top:8px;color:var(--text-dim)">パスが違う場合はここを修正する。</p>
+    <p style="margin-top:12px"><strong>Step 3</strong>：GitHub Desktop で両リポが clone 済みであることを確認する（<code>C:\GitHub\</code> 配下に存在すること）。</p>
+  </div>
+
+  <h4>使い方（毎回）</h4>
+  <div class="card">
+    <p><strong>Step 1</strong>：Claudeの出力から<strong>すべてのファイル</strong>をダウンロード（ダウンロードフォルダに自動保存される）</p>
+    <p><strong>Step 2</strong>：デスクトップの <code>deploy.bat</code> を<strong>ダブルクリック</strong></p>
+    <p><strong>Step 3</strong>：黒い画面（コマンドプロンプト）が開き、処理が流れる</p>
+    <p><strong>Step 4</strong>：最終レポートを確認</p>
+    <pre><code>══════════════════════════════════════════════════
+  📋 デプロイ完了レポート
+══════════════════════════════════════════════════
+
+  ✅ 全ステップ正常完了
+
+  ⚡ 残り手動タスク:
+    ☐ 決算チェック_YYYYMMDD.xlsx → Claudeプロジェクトにアップロード
+    ☐ earnings-check-manual.html → Claudeプロジェクトにアップロード</code></pre>
+    <p style="margin-top:8px"><strong>Step 5</strong>：残り手動タスク（xlsx + manual のClaude プロジェクトアップロード）を実行</p>
+  </div>
+
+  <h4>自動振り分けルール</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ファイル名パターン</th><th>振り分け先</th></tr></thead>
+      <tbody>
+        <tr><td><code>2025-Q4-*.md</code></td><td><code>earnings-insight/highlights/</code></td></tr>
+        <tr><td><code>summary-*.csv</code></td><td><code>earnings-insight/highlights/</code></td></tr>
+        <tr><td><code>earnings-check-manual.html</code></td><td><code>github-pages-guide/</code></td></tr>
+        <tr><td><code>eh-manual.html</code></td><td><code>github-pages-guide/</code></td></tr>
+        <tr><td><code>launcher.html</code></td><td><code>github-pages-guide/</code></td></tr>
+        <tr><td><code>決算チェック_*.xlsx</code></td><td>（対象外）手動でプロジェクトにアップ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>レポートの読み方</h4>
+  <div class="card">
+    <p>
+      <strong>✅</strong> = 成功（コピー、commit、push すべて正常）<br>
+      <strong>❌</strong> = 失敗（パス間違い、ネットワークエラー等）→ 手動で対応<br>
+      <strong>ℹ️</strong> = 変更なし（該当リポに新しいファイルがなかった場合はスキップ）
+    </p>
+    <p style="margin-top:8px">Phase 5 で各リポの最新commit hash と時刻が表示される。GitHubのWebで同じhashが見えれば push 完了の証拠。</p>
+  </div>
+
+  <div class="alert alert-warning">
+    <div class="alert-title">注意：deploy.bat で処理されないファイル</div>
+    <p><code>決算チェック_YYYYMMDD.xlsx</code> と <code>earnings-check-manual.html</code>（プロジェクト用）は<strong>手動でClaudeプロジェクトにアップロード</strong>が必要。これはClaude UIの制約のため自動化できない。</p>
+  </div>
+</section>
+
+<!-- ═══ 16. 自動化ロードマップ ═══ -->
+<section id="automation-roadmap">
+  <h2><span class="num">16</span>自動化ロードマップ</h2>
+  <p>現在のワークフローの自動化状況と、将来的な改善計画。</p>
+
+  <h3>現状（v1.6 時点）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ステップ</th><th>手段</th><th>自動化</th></tr></thead>
+      <tbody>
+        <tr><td>IR取得 → xlsx入力 → MD → CSV</td><td>Claude（このチャット）</td><td style="color:#3fb950">✅ 自動</td></tr>
+        <tr><td>ファイルダウンロード</td><td>ブラウザ手動</td><td style="color:#d29922">🟡 手動（ブラウザ制約）</td></tr>
+        <tr><td>リポへの振り分け + commit + push</td><td><code>deploy.bat</code></td><td style="color:#3fb950">✅ 自動（ダブルクリック）</td></tr>
+        <tr><td>Claudeプロジェクトにアップロード</td><td>手動</td><td style="color:#d29922">🟡 手動（Claude UI制約）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>将来計画：Claude Code / Cowork への移行</h3>
+  <div class="card">
+    <p><strong>Claude Code</strong>（ターミナルベース）または <strong>Cowork</strong>（デスクトップGUI）に移行すると、ローカルファイルシステムへの直接アクセスが可能になり、以下が実現する：</p>
+  </div>
+
+  <div class="table-wrap" style="margin-top:12px">
+    <table>
+      <thead><tr><th>機能</th><th>Claude.ai（現在）</th><th>Claude Code</th><th>Cowork</th></tr></thead>
+      <tbody>
+        <tr><td>ファイル生成</td><td>✅</td><td>✅</td><td>✅</td></tr>
+        <tr><td>ローカルに直接書き込み</td><td>❌</td><td>✅</td><td>✅</td></tr>
+        <tr><td>git commit + push</td><td>❌</td><td>✅（<code>/commit</code>一発）</td><td>✅</td></tr>
+        <tr><td>複数リポ操作</td><td>❌</td><td>✅（worktree対応）</td><td>✅</td></tr>
+        <tr><td>ダウンロード不要</td><td>❌</td><td>✅</td><td>✅</td></tr>
+        <tr><td>非エンジニア向けUI</td><td>✅</td><td>❌（ターミナル）</td><td>✅</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:16px">
+    <div class="alert-title">移行の理想形</div>
+    <p>「○○の決算出た、更新して」→ Claude Code/Cowork が IR取得 → xlsx更新 → MD/CSV作成 → 正しいリポに直接保存 → commit → push まで<strong>全自動</strong>。ダウンロードという概念自体がなくなる。</p>
+  </div>
+
+  <h3>移行の前提条件</h3>
+  <div class="card">
+    <p>以下が解決したら移行を検討する：</p>
+    <p style="margin-top:8px">
+      ☐ Windows版 Cowork の<strong>フォルダアクセス制限</strong>が緩和される（現在はユーザーフォルダのみ、<code>C:\GitHub\</code> にアクセス不可の報告あり）<br>
+      ☐ Claude Code のWindows対応が安定する<br>
+      ☐ openpyxl等のPythonライブラリがClaude Code環境で利用可能であることを確認<br>
+      ☐ 現在の決算チェック運用が十分に標準化される（マニュアル§14の企業別癖の蓄積が一定水準に達する）
+    </p>
+  </div>
+
+  <h3>当面の改善案</h3>
+  <div class="card">
+    <p>
+      ☐ <code>deploy.bat</code> の運用テスト → 問題なければ標準フローに昇格<br>
+      ☐ xlsxのClaude プロジェクトへのアップロードは手動のまま（UI制約）<br>
+      ☐ GitHub Actions で push 後にSlack通知等を追加することも可能（将来）
+    </p>
+  </div>
 </section>
 
 <!-- ═══ Footer ═══ -->
 <footer style="margin-top:80px;padding-top:32px;border-top:1px solid var(--border);text-align:center;color:var(--text-dim);font-size:13px;">
-  決算チェック 運用マニュアル v1.5 — 2026-03-07 更新<br>
+  決算チェック 運用マニュアル v1.6 — 2026-03-07 更新<br>
   <span style="font-family:'JetBrains Mono',monospace;font-size:11px;">Maintained by まっち &amp; Claude</span>
 </footer>
 
